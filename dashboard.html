@@ -265,6 +265,10 @@ a.row-action { display: grid; }
 .fixture-queue small { color: #4e5968; font-size: 14px; line-height: 1.4; }
 .spotlight .fixture-queue small { color: rgba(255,255,255,.94); }
 .storage-warning { margin: 0 20px 16px; color: #8c5700; font-size: 14px; line-height: 1.4; }
+.sync-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; padding: 12px 14px; border: 1px solid rgba(240,140,0,.25); border-radius: 16px; background: var(--orange-soft); color: #8c5700; font-size: 13px; }
+.sync-banner strong { font-weight: 760; }
+.sync-chip { padding: 4px 9px; border-radius: 999px; background: rgba(255,255,255,.7); font-size: 12px; font-weight: 650; }
+.status-select.changed { border-color: var(--orange); box-shadow: 0 0 0 2px rgba(240,140,0,.14); }
 .automation-state { margin: 0 20px 16px; padding: 13px 14px; border-radius: 14px; background: var(--orange-soft); color: #8c5700; font-size: 14px; font-weight: 650; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .queue-button:disabled { cursor: wait; opacity: .65; }
@@ -411,8 +415,8 @@ dialog::backdrop { background: rgba(11,18,27,.34); -webkit-backdrop-filter: blur
       </div>
     </div>
     <nav class="top-actions" aria-label="Dashboard tools">
-      <a class="quiet-button desktop-only" href="jobs/tracker.json">Source data</a>
-      <a class="quiet-button desktop-only" href="applications/_master/resume.md">Master resume</a>
+      <a class="quiet-button desktop-only" id="navSource" href="jobs/tracker.json">Source data</a>
+      <a class="quiet-button desktop-only" id="navMaster" href="applications/_master/resume.md">Master resume</a>
       <button class="icon-button" id="exportBtn" type="button" aria-label="Export application statuses" title="Export application statuses">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg>
       </button>
@@ -439,6 +443,7 @@ dialog::backdrop { background: rgba(11,18,27,.34); -webkit-backdrop-filter: blur
         <p>Showing <span id="visibleCount"></span> postings. <span id="statusStorageCopy">Status changes are saved right in this browser.</span></p>
       </div>
     </div>
+    <div class="sync-banner" id="syncBanner" hidden></div>
     <div class="filter-panel" aria-label="Posting filters">
       <label class="search-wrap">
         <span class="sr-only"></span>
@@ -458,12 +463,15 @@ dialog::backdrop { background: rgba(11,18,27,.34); -webkit-backdrop-filter: blur
       <select class="filter-select" id="statusFilter" aria-label="Application status">
         <option value="all">All statuses</option><option value="discovered">Discovered</option><option value="materials_ready">Ready</option><option value="applied">Applied</option><option value="interview">Interview</option><option value="offer">Offer</option><option value="rejected">Rejected</option><option value="dropped">Dropped</option>
       </select>
+      <select class="filter-select" id="sortBy" aria-label="Sort order">
+        <option value="score">Sort: Fit score</option><option value="posted">Sort: Newest</option>
+      </select>
     </div>
     <div class="role-list" id="roleList"></div>
     <div class="empty" id="empty"><strong>No postings match.</strong>Try a different search or filter.</div>
   </section>
 
-  <details class="automation">
+  <details class="automation" id="automationPanel">
     <summary>
       <span class="automation-summary-copy">
         <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg></span>
@@ -544,7 +552,13 @@ let csrfToken = null;
 let snapshot = null;
 let connectedRoles = {};
 let isConnected = false;
-const staticMode = window.location.protocol === 'file:';
+const isLoopbackOrigin = window.location.protocol === 'http:' && window.location.hostname === '127.0.0.1';
+const staticMode = !isLoopbackOrigin;
+const remoteMode = staticMode && window.location.protocol !== 'file:';
+const statusOverrides = data.status_overrides || {};
+let artifactApi = null;
+let artifactMode = false;
+let artifactReadOnly = false;
 let pollTimer = null;
 let reconnectTimer = null;
 let pollInFlight = false;
@@ -562,7 +576,12 @@ const icons = {
   detail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>'
 };
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
-const currentStatus = role => isConnected ? connectedRoles[role.id]?.status : (staticMode ? (saved[role.id] || role.status) : role.status);
+const currentStatus = role => {
+  if (isConnected) return connectedRoles[role.id]?.status;
+  const base = statusOverrides[role.id]?.status || role.status;
+  if (artifactMode || !staticMode) return base;
+  return saved[role.id] || base;
+};
 const automationFor = role => connectedRoles[role.id]?.automation || {};
 const isLocal = role => !['remote_bonus','relocation'].includes(role.tier);
 const pathUrl = path => path.split('/').map(encodeURIComponent).join('/');
@@ -583,6 +602,7 @@ const safeConnectionMessage = 'Could not reach the local fixture service. Switch
 const safeQueueMessage = 'The fixture queue request was rejected. No real application was submitted.';
 const resumePdfName = "Jane Doe Resume.pdf";
 const materialUrl = role => isConnected ? `/api/v1/materials/${encodeURIComponent(role.id)}` : `${pathUrl(role.application_dir)}/${encodeURIComponent(resumePdfName)}`;
+const materialsAvailable = () => isConnected || !remoteMode;
 
 function showToast(message) {
   const toast = document.getElementById('toast');
@@ -593,17 +613,63 @@ function showToast(message) {
 }
 function setText(id, value) { document.getElementById(id).textContent = value; }
 function setStatus(id, status, announce = true) {
-  if (!staticMode || isConnected) return;
+  if (isConnected) return;
+  if (artifactMode) { persistSharedStatus(id, status); return; }
+  if (!staticMode) return;
   const role = roles.find(item => item.id === id);
   saved[id] = status;
   writeStoredStatuses();
   renderAll();
   if (announce && role) showToast(`${role.company} status changed to '${labelFor(status)}'.`);
 }
+const embedJson = value => JSON.stringify(value).replace(/</g, '\\u003c').replace(/&/g, '\\u0026').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+async function persistSharedStatus(id, status) {
+  const role = roles.find(item => item.id === id);
+  if (!role || !artifactApi) return;
+  const selects = document.querySelectorAll(`[data-status-id="${CSS.escape(id)}"]`);
+  selects.forEach(select => { select.disabled = true; });
+  showToast('Saving to the shared page…');
+  try {
+    const response = await fetch(window.location.href, {cache:'no-store'});
+    if (!response.ok) throw new Error('source unavailable');
+    const source = await response.text();
+    const marker = '<script id="job-data" type="application/json">';
+    const start = source.indexOf(marker);
+    const end = source.indexOf('<\/script>', start);
+    if (start < 0 || end < 0) throw new Error('data block missing');
+    const payload = JSON.parse(source.slice(start + marker.length, end));
+    const overrides = {...(payload.status_overrides || {})};
+    const baseline = (payload.roles.find(item => item.id === id) || {}).status;
+    if (baseline === status) delete overrides[id];
+    else overrides[id] = {status, at: new Date().toISOString(), from: baseline};
+    payload.status_overrides = overrides;
+    const updated = source.slice(0, start + marker.length) + embedJson(payload) + source.slice(end);
+    await artifactApi.publish(updated);
+    showToast(`${role.company} saved to the shared page for every viewer.`);
+  } catch (error) {
+    const code = String(error?.code || error?.message || error);
+    if (code.includes('not_writer') || code.includes('not_granted')) {
+      artifactReadOnly = true;
+      showToast('This shared page is read-only for you.');
+    } else if (code.includes('conflict')) {
+      showToast('Someone else saved first — loading their version.');
+    } else {
+      saved[id] = status;
+      writeStoredStatuses();
+      showToast('Could not save to the shared page — kept in this browser only.');
+    }
+    renderAll();
+    renderModeSurface();
+  } finally {
+    selects.forEach(select => { select.disabled = false; });
+  }
+}
 function statusSelect(role, className = 'status-select') {
-  const disabled = !staticMode || isConnected ? ' disabled title="Read-only while in service mode."' : '';
+  const editable = !isConnected && staticMode && !artifactReadOnly;
+  const disabled = editable ? '' : ' disabled title="Read-only while in service mode."';
+  const changed = statusOverrides[role.id] ? ' changed' : '';
   const options = statusOptions.map(status => `<option value="${status}" ${currentStatus(role) === status ? 'selected' : ''}>${labelFor(status)}</option>`).join('');
-  return `<select class="${className}" data-status-id="${esc(role.id)}" aria-label="${esc(role.company)} ${esc(role.title)} application status"${disabled}>${options}</select>`;
+  return `<select class="${className}${changed}" data-status-id="${esc(role.id)}" aria-label="${esc(role.company)} ${esc(role.title)} application status"${disabled}>${options}</select>`;
 }
 function commandState(role) {
   const state = automationFor(role).state;
@@ -665,6 +731,56 @@ function resetOfflineSurface() {
   const warning = document.getElementById('storageWarning');
   warning.hidden = !storageWarning;
   warning.textContent = storageWarning;
+  renderModeSurface();
+}
+function renderModeSurface() {
+  if (isConnected) return;
+  const modeLabel = document.getElementById('modeLabel');
+  const copy = document.getElementById('statusStorageCopy');
+  if (artifactMode) {
+    modeLabel.textContent = artifactReadOnly ? 'Shared page · read-only for you' : 'Shared page · saves for every viewer';
+    modeLabel.classList.add('connected');
+    copy.textContent = artifactReadOnly ? 'You can view this shared page but not change statuses.' : 'Status changes publish a new version of this page for every viewer. Ask Claude to sync them into the tracker.';
+    document.getElementById('resetBtn').hidden = true;
+  } else if (remoteMode) {
+    modeLabel.textContent = 'Remote copy · this browser only';
+    copy.textContent = 'Status changes stay in this browser and are not the repo record.';
+  }
+}
+function renderPendingSync() {
+  const banner = document.getElementById('syncBanner');
+  if (!banner) return;
+  const entries = Object.entries(statusOverrides);
+  banner.hidden = entries.length === 0;
+  if (!entries.length) { banner.innerHTML = ''; return; }
+  banner.innerHTML = `<strong>${entries.length} change${entries.length > 1 ? 's' : ''} awaiting tracker sync</strong>` + entries.map(([id, info]) => {
+    const role = roles.find(item => item.id === id);
+    return `<span class="sync-chip">${esc(role ? role.company : id)}: ${esc(labelFor(info.from || (role || {}).status))} → ${esc(labelFor(info.status))}</span>`;
+  }).join('');
+}
+function updateStatusFilterCounts() {
+  const counts = {};
+  roles.forEach(role => { const status = currentStatus(role); counts[status] = (counts[status] || 0) + 1; });
+  document.querySelectorAll('#statusFilter option').forEach(option => {
+    option.textContent = option.value === 'all' ? `All statuses (${roles.length})` : `${labelFor(option.value)} (${counts[option.value] || 0})`;
+  });
+}
+function applyRemoteChrome() {
+  if (!remoteMode) return;
+  ['navSource', 'navMaster'].forEach(id => { const node = document.getElementById(id); if (node) node.hidden = true; });
+  const automationPanel = document.getElementById('automationPanel');
+  if (automationPanel) automationPanel.style.display = 'none';
+  document.getElementById('exportBtn').hidden = true;
+}
+function initArtifactContext() {
+  if (!remoteMode || !window.claude || typeof window.claude.use !== 'function') return;
+  Promise.resolve(window.claude.use('artifact')).then(api => {
+    if (!api) return;
+    artifactApi = api;
+    artifactMode = true;
+    renderAll();
+    renderModeSurface();
+  }).catch(() => {});
 }
 function clearTimer(timer) {
   if (timer !== null) clearTimeout(timer);
@@ -779,7 +895,7 @@ function renderSpotlight() {
     container.innerHTML = '<div class="spotlight-grid"><div><div class="spotlight-kicker"><span class="live-dot"></span>Today\'s priority</div><h2>All prepared applications are done.</h2><p class="spotlight-reason">Collect new postings or move on to interview prep.</p></div></div>';
     return;
   }
-  container.innerHTML = `<div class="spotlight-grid"><div><div class="spotlight-kicker"><span class="live-dot"></span>Apply to this first · fit ${esc(role.score)}</div><div class="spotlight-company">${esc(role.company)}</div><h2>${esc(role.title)}</h2><p class="spotlight-reason">${esc(role.match)}</p><div class="spotlight-meta"><span class="glass-chip">${esc(role.location)}</span><span class="glass-chip">${esc(role.work_model)}</span><span class="glass-chip">${esc(role.salary)}</span></div></div><div class="spotlight-actions">${queueControl(role, 'primary-button') || externalApply(role, 'primary-button')}<button class="secondary-button" type="button" data-open-role="${esc(role.id)}">View materials</button><a class="secondary-button" href="${esc(materialUrl(role))}">Resume PDF</a></div></div>`;
+  container.innerHTML = `<div class="spotlight-grid"><div><div class="spotlight-kicker"><span class="live-dot"></span>Apply to this first · fit ${esc(role.score)}</div><div class="spotlight-company">${esc(role.company)}</div><h2>${esc(role.title)}</h2><p class="spotlight-reason">${esc(role.match)}</p><div class="spotlight-meta"><span class="glass-chip">${esc(role.location)}</span><span class="glass-chip">${esc(role.work_model)}</span><span class="glass-chip">${esc(role.salary)}</span></div></div><div class="spotlight-actions">${queueControl(role, 'primary-button') || externalApply(role, 'primary-button')}<button class="secondary-button" type="button" data-open-role="${esc(role.id)}">View materials</button>${materialsAvailable() ? `<a class="secondary-button" href="${esc(materialUrl(role))}">Resume PDF</a>` : ''}</div></div>`;
 }
 function renderMetrics() {
   const stage = status => roles.filter(role => currentStatus(role) === status).length;
@@ -794,13 +910,17 @@ function roleMatches(role) {
   return (!query || haystack.includes(query)) && (locationFilter !== 'local' || isLocal(role)) && (locationFilter !== 'remote_bonus' || role.tier === 'remote_bonus') && (locationFilter !== 'relocation' || role.tier === 'relocation') && (tier === 'all' || role.tier === tier) && (status === 'all' || currentStatus(role) === status);
 }
 function renderRoles() {
-  const filtered = roles.filter(roleMatches).sort((a,b) => b.score - a.score || b.posted.localeCompare(a.posted));
+  const sortBy = document.getElementById('sortBy')?.value || 'score';
+  const byScore = (a,b) => b.score - a.score || b.posted.localeCompare(a.posted);
+  const byPosted = (a,b) => b.posted.localeCompare(a.posted) || b.score - a.score;
+  const filtered = roles.filter(roleMatches).sort(sortBy === 'posted' ? byPosted : byScore);
   setText('visibleCount', filtered.length);
   document.getElementById('empty').style.display = filtered.length ? 'none' : 'block';
   document.getElementById('roleList').innerHTML = filtered.map(role => {
     const scoreClass = role.score >= 8 ? 'high' : role.score < 7 ? 'low' : '';
     const queue = queueControl(role);
-    return `<article class="role-row"><div class="score-ring ${scoreClass}" aria-label="Fit ${esc(role.score)}">${esc(role.score)}</div><div class="role-copy"><div class="role-company">${esc(role.company)}</div><div class="role-title">${esc(role.title)}</div><div class="role-match">${esc(role.match)}</div></div><div class="meta-stack"><div class="meta-primary">${esc(role.location)}</div><div class="meta-secondary">${esc(role.work_model)} · ${esc(role.salary)}</div></div>${statusSelect(role)}<div class="row-actions"><a class="row-action material-link" href="${esc(materialUrl(role))}" aria-label="Open ${esc(role.company)} materials" title="Open materials">${icons.document}</a>${queue || externalApply(role, 'row-action')}<button class="row-action" type="button" data-open-role="${esc(role.id)}" aria-label="${esc(role.company)} posting details" title="Posting details">${icons.detail}</button></div></article>`;
+    const materialLink = materialsAvailable() ? `<a class="row-action material-link" href="${esc(materialUrl(role))}" aria-label="Open ${esc(role.company)} materials" title="Open materials">${icons.document}</a>` : '';
+    return `<article class="role-row"><div class="score-ring ${scoreClass}" aria-label="Fit ${esc(role.score)}">${esc(role.score)}</div><div class="role-copy"><div class="role-company">${esc(role.company)}</div><div class="role-title">${esc(role.title)}</div><div class="role-match">${esc(role.match)}</div></div><div class="meta-stack"><div class="meta-primary">${esc(role.location)}</div><div class="meta-secondary">${esc(role.work_model)} · ${esc(role.salary)}</div></div>${statusSelect(role)}<div class="row-actions">${materialLink}${queue || externalApply(role, 'row-action')}<button class="row-action" type="button" data-open-role="${esc(role.id)}" aria-label="${esc(role.company)} posting details" title="Posting details">${icons.detail}</button></div></article>`;
   }).join('');
 }
 function bindDynamicControls() {
@@ -813,14 +933,14 @@ function openRole(id) {
   if (!role) return;
   document.getElementById('dialogCompany').textContent = role.company;
   document.getElementById('dialogTitle').textContent = role.title;
-  document.getElementById('dialogContent').innerHTML = `<div class="sheet-body"><div class="sheet-score"><strong>${esc(role.score)}</strong><span>/ 10 fit</span></div><div class="detail-grid"><div class="detail-cell"><div class="detail-label">Location</div><div class="detail-value">${esc(role.location)}</div></div><div class="detail-cell"><div class="detail-label">Work model</div><div class="detail-value">${esc(role.work_model)}</div></div><div class="detail-cell"><div class="detail-label">Compensation</div><div class="detail-value">${esc(role.salary)}</div></div><div class="detail-cell"><div class="detail-label">Posted · Channel</div><div class="detail-value">${formatDate(role.posted)} · ${esc(role.channel)}</div></div></div><div class="detail-section"><h3>Why it fits</h3><p>${esc(role.match)}</p></div><div class="detail-section"><h3>Requirements</h3><p>${esc(role.requirements)}</p></div><div class="detail-section"><h3>Key skills</h3><div class="keyword-list">${role.keywords.map(keyword => `<span class="keyword">${esc(keyword)}</span>`).join('')}</div></div><div class="detail-section"><h3>Application status</h3>${statusSelect(role, 'status-select dialog-status')}</div></div><div class="sheet-actions"><a class="link-button" href="${esc(materialUrl(role))}">PDF</a>${queueControl(role, 'primary-button') || externalApply(role, 'primary-button')}</div>`;
+  document.getElementById('dialogContent').innerHTML = `<div class="sheet-body"><div class="sheet-score"><strong>${esc(role.score)}</strong><span>/ 10 fit</span></div><div class="detail-grid"><div class="detail-cell"><div class="detail-label">Location</div><div class="detail-value">${esc(role.location)}</div></div><div class="detail-cell"><div class="detail-label">Work model</div><div class="detail-value">${esc(role.work_model)}</div></div><div class="detail-cell"><div class="detail-label">Compensation</div><div class="detail-value">${esc(role.salary)}</div></div><div class="detail-cell"><div class="detail-label">Posted · Channel</div><div class="detail-value">${formatDate(role.posted)} · ${esc(role.channel)}</div></div></div><div class="detail-section"><h3>Why it fits</h3><p>${esc(role.match)}</p></div><div class="detail-section"><h3>Requirements</h3><p>${esc(role.requirements)}</p></div><div class="detail-section"><h3>Key skills</h3><div class="keyword-list">${role.keywords.map(keyword => `<span class="keyword">${esc(keyword)}</span>`).join('')}</div></div><div class="detail-section"><h3>Application status</h3>${statusSelect(role, 'status-select dialog-status')}</div></div><div class="sheet-actions">${materialsAvailable() ? `<a class="link-button" href="${esc(materialUrl(role))}">PDF</a>` : ''}${queueControl(role, 'primary-button') || externalApply(role, 'primary-button')}</div>`;
   const dialog = document.getElementById('roleDialog');
   dialog.showModal();
   bindDynamicControls();
 }
-function renderAll() { renderIntro(); renderSpotlight(); renderMetrics(); renderRoles(); bindDynamicControls(); }
+function renderAll() { renderIntro(); renderSpotlight(); renderMetrics(); renderRoles(); updateStatusFilterCounts(); renderPendingSync(); bindDynamicControls(); }
 document.getElementById('search').addEventListener('input', renderAll);
-['tierFilter','statusFilter'].forEach(id => document.getElementById(id).addEventListener('change', renderAll));
+['tierFilter','statusFilter','sortBy'].forEach(id => document.getElementById(id).addEventListener('change', renderAll));
 document.querySelectorAll('[data-location]').forEach(button => button.addEventListener('click', () => { locationFilter = button.dataset.location; document.querySelectorAll('[data-location]').forEach(item => { const active = item === button; item.classList.toggle('active', active); item.setAttribute('aria-pressed', String(active)); }); renderAll(); }));
 document.getElementById('closeDialog').addEventListener('click', () => document.getElementById('roleDialog').close());
 document.getElementById('roleDialog').addEventListener('click', event => { if (event.target === event.currentTarget) event.currentTarget.close(); });
@@ -847,6 +967,8 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   URL.revokeObjectURL(anchor.href);
   showToast(isConnected ? 'Saved the fixture status file. Not a real application record.' : 'Saved the scratch status file. Not a real application record.');
 });
+applyRemoteChrome();
+initArtifactContext();
 renderAll();
 resetOfflineSurface();
 loadConnectedState();

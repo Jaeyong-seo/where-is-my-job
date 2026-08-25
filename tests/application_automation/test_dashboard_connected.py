@@ -215,7 +215,8 @@ def test_dashboard_queue_replay_keeps_one_fixture_command_after_lost_response(tm
 def test_dashboard_fails_closed_to_fixture_only_connected_mode() -> None:
     page = DASHBOARD_PATH.read_text(encoding="utf-8")
 
-    assert "const staticMode = window.location.protocol === 'file:';" in page
+    assert "const isLoopbackOrigin = window.location.protocol === 'http:' && window.location.hostname === '127.0.0.1';" in page
+    assert "const staticMode = !isLoopbackOrigin;" in page
     assert "function isSupportedLoopbackOrigin()" in page
     assert "window.location.hostname === '127.0.0.1'" in page
     assert page.index("fetch('/api/v1/session'") < page.index("fetch('/api/v1/snapshot'")
@@ -242,7 +243,8 @@ def test_dashboard_disconnect_is_read_only_and_errors_are_sanitized() -> None:
     assert "Disconnected · read-only" in page
     assert "Automation and status changes are unavailable." in page
     assert "Reading embedded data only until the service connection recovers. Local state is not modified." in page
-    assert "if (!staticMode || isConnected) return;" in page
+    assert "if (isConnected) return;" in page
+    assert "if (!staticMode) return;" in page
     assert "safeConnectionMessage" in page
     assert "safeQueueMessage" in page
     assert "error.message" not in page
