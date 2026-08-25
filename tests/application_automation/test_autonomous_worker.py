@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import socket
 import threading
+import time
 from pathlib import Path
 import pytest
 
@@ -221,10 +222,14 @@ def test_fixture_worker_records_safe_orchestration_errors(tmp_path: Path, monkey
     with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:
         task = app.state.worker_task
         assert task is not None
-        completed = threading.Event()
-        task.add_done_callback(lambda _: completed.set())
         assert observed.wait(timeout=10)
-        assert completed.wait(timeout=10)
+        # Poll task.done() instead of add_done_callback: registering a done
+        # callback from the test thread does not reliably wake the portal's
+        # event loop, so the callback can sit unscheduled while the loop idles.
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline and not task.done():
+            time.sleep(0.05)
+        assert task.done()
         assert app.state.worker_error == "fixture worker unavailable"
         assert app.state.worker_failure == {
             "code": "fixture_worker_run_failed",

@@ -63,5 +63,3 @@ tests/application_automation/test_service_safety.py::test_unexpected_adapter_fai
 tests/application_automation/test_service_safety.py::test_unexpected_adapter_failure_is_sanitized_failed_closed_at_each_stage[inspect-0-0-awaiting_user]
 tests/application_automation/test_service_safety.py::test_unexpected_adapter_failure_is_sanitized_failed_closed_at_each_stage[observe-1-1-manual_followup]
 tests/application_automation/test_service_safety.py::test_unexpected_adapter_failure_is_sanitized_failed_closed_at_each_stage[submit-1-1-manual_followup]
-# Fails on Linux CI only: worker task never completes after OrchestrationError (passes on macOS)
-tests/application_automation/test_autonomous_worker.py::test_fixture_worker_records_safe_orchestration_errors
