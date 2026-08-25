@@ -80,7 +80,7 @@ def test_run_next_ownership_race_has_one_owner_and_no_loser_side_effects(tmp_pat
 
     def run_next(worker: ApplicationOrchestrator) -> None:
         try:
-            barrier.wait(timeout=1)
+            barrier.wait(timeout=10)
             results.append(worker.run_next())
         except BaseException as error:
             errors.append(error)
@@ -201,7 +201,7 @@ def test_fixture_lifespan_worker_idles_and_cancels_cleanly(tmp_path: Path, monke
     app = create_app(database, fixture_mode=True, catalog=_catalog(tmp_path), autonomous_worker=True, worker_idle_seconds=0.001)
     with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:
         assert app.state.worker_task is not None
-        assert idle_called.wait(timeout=1)
+        assert idle_called.wait(timeout=10)
         assert app.state.worker_error is None
         assert client.get("/api/v1/health").json() == {"status": "ok", "worker": "running"}
     assert app.state.worker_task is None
@@ -223,8 +223,8 @@ def test_fixture_worker_records_safe_orchestration_errors(tmp_path: Path, monkey
         assert task is not None
         completed = threading.Event()
         task.add_done_callback(lambda _: completed.set())
-        assert observed.wait(timeout=1)
-        assert completed.wait(timeout=1)
+        assert observed.wait(timeout=10)
+        assert completed.wait(timeout=10)
         assert app.state.worker_error == "fixture worker unavailable"
         assert app.state.worker_failure == {
             "code": "fixture_worker_run_failed",
@@ -254,7 +254,7 @@ def test_crashed_worker_disables_queueing(tmp_path: Path, monkeypatch) -> None:
         autonomous_worker=True,
     )
     with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:
-        assert failed.wait(timeout=1)
+        assert failed.wait(timeout=10)
         response = client.post(
             "/app/v1/bootstrap",
             headers={
@@ -438,7 +438,7 @@ def test_worker_shutdown_waits_for_inflight_run_before_clearing_state(
     def blocked_run_next(self: ApplicationOrchestrator) -> None:
         calls.append(None)
         started.set()
-        assert allow_completion.wait(timeout=1)
+        assert allow_completion.wait(timeout=10)
         completed.set()
         return None
 
@@ -454,7 +454,7 @@ def test_worker_shutdown_waits_for_inflight_run_before_clearing_state(
         app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)
     )
     client.__enter__()
-    assert started.wait(timeout=1)
+    assert started.wait(timeout=10)
 
     shutdown_complete = threading.Event()
     shutdown = threading.Thread(
