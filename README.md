@@ -135,6 +135,8 @@ bun tools/linkedin-jobs.ts search "frontend engineer" --location "Vancouver, BC"
 
 Builder requirements: Python 3.11+ and the `builders` dependency group (`uv sync --group builders` installs PyMuPDF, `lxml`, `python-docx`, `reportlab`), plus the TTF fonts declared under `fonts` in `user-profile.json`.
 
+The tracker's field-by-field reference lives in [docs/tracker-schema.md](docs/tracker-schema.md).
+
 Status changes made in the `file://` dashboard are stored only in that browser's `localStorage` scratch. Export them with "Export application statuses" before moving to another browser. The permanent source of truth for postings and statuses is `jobs/tracker.json`.
 
 ## Operating rules
