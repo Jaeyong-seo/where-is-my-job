@@ -22,13 +22,13 @@ OUTPUT = ROOT / "dashboard.html"
 PROFILE = load_profile()
 
 TEMPLATE = r'''<!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#f2f4f6">
-<title>__BRAND_NAME__ · 지원 대시보드</title>
+<title>__BRAND_NAME__ · Application Dashboard</title>
 <style>
 :root {
   --bg: #f2f4f6;
@@ -428,18 +428,18 @@ dialog::backdrop { background: rgba(11,18,27,.34); -webkit-backdrop-filter: blur
     <div class="brand">
       <div class="brand-mark" aria-hidden="true">__BRAND_INITIALS__</div>
       <div>
-        <div class="brand-name">지원 현황</div>
+        <div class="brand-name">Applications</div>
         <div class="brand-meta">__BRAND_CITY__ · __BRAND_NAME__</div>
-        <span class="mode-label" id="modeLabel" role="status" aria-live="polite" aria-atomic="true">로컬 스크래치 · 오프라인</span>
+        <span class="mode-label" id="modeLabel" role="status" aria-live="polite" aria-atomic="true">Local scratch · offline</span>
       </div>
     </div>
-    <nav class="top-actions" aria-label="대시보드 도구">
-      <a class="quiet-button desktop-only" href="jobs/tracker.json">원본 데이터</a>
-      <a class="quiet-button desktop-only" href="applications/_master/resume.md">기본 이력서</a>
-      <button class="icon-button" id="exportBtn" type="button" aria-label="지원 상태 내보내기" title="지원 상태 내보내기">
+    <nav class="top-actions" aria-label="Dashboard tools">
+      <a class="quiet-button desktop-only" href="jobs/tracker.json">Source data</a>
+      <a class="quiet-button desktop-only" href="applications/_master/resume.md">Master resume</a>
+      <button class="icon-button" id="exportBtn" type="button" aria-label="Export application statuses" title="Export application statuses">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg>
       </button>
-      <button class="icon-button" id="resetBtn" type="button" aria-label="브라우저 상태 초기화" title="브라우저 상태 초기화">
+      <button class="icon-button" id="resetBtn" type="button" aria-label="Reset browser state" title="Reset browser state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
       </button>
     </nav>
@@ -447,70 +447,70 @@ dialog::backdrop { background: rgba(11,18,27,.34); -webkit-backdrop-filter: blur
 </header>
 <main class="shell">
   <section class="intro" aria-labelledby="page-title">
-    <p class="eyebrow">오늘의 지원 플랜</p>
-    <h1 id="page-title">다음 지원에만<br>집중하세요.</h1>
+    <p class="eyebrow">Today's application plan</p>
+    <h1 id="page-title">Focus on the<br>next application.</h1>
     <p class="intro-copy" id="introCopy"></p>
   </section>
 
-  <section class="spotlight" id="spotlight" aria-label="가장 먼저 지원할 공고"></section>
-  <section class="metrics" id="metrics" aria-label="지원 현황 요약"></section>
+  <section class="spotlight" id="spotlight" aria-label="Top posting to apply to first"></section>
+  <section class="metrics" id="metrics" aria-label="Application summary"></section>
 
   <section class="section" aria-labelledby="pipeline-title">
     <div class="section-heading">
       <div>
-        <h2 id="pipeline-title">지원 파이프라인</h2>
-        <p><span id="visibleCount"></span>개의 공고를 보고 있어요. <span id="statusStorageCopy">상태 변경은 이 브라우저에 바로 저장됩니다.</span></p>
+        <h2 id="pipeline-title">Application pipeline</h2>
+        <p>Showing <span id="visibleCount"></span> postings. <span id="statusStorageCopy">Status changes are saved right in this browser.</span></p>
       </div>
     </div>
-    <div class="filter-panel" aria-label="공고 필터">
+    <div class="filter-panel" aria-label="Posting filters">
       <label class="search-wrap">
         <span class="sr-only"></span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.7-3.7"/></svg>
-        <input type="search" id="search" aria-label="회사, 직무, 기술 검색" placeholder="회사, 직무, 기술 검색">
+        <input type="search" id="search" aria-label="Search company, role, or skill" placeholder="Search company, role, or skill">
       </label>
       <fieldset class="segmented" id="locationSegments">
-        <legend class="sr-only">근무 형태</legend>
-        <button class="segment-button active" type="button" data-location="all" aria-pressed="true">전체</button>
+        <legend class="sr-only">Work model</legend>
+        <button class="segment-button active" type="button" data-location="all" aria-pressed="true">All</button>
         <button class="segment-button" type="button" data-location="local" aria-pressed="false">__BRAND_CITY__</button>
-        <button class="segment-button" type="button" data-location="remote_bonus" aria-pressed="false">리모트</button>
-        <button class="segment-button" type="button" data-location="relocation" aria-pressed="false">이전</button>
+        <button class="segment-button" type="button" data-location="remote_bonus" aria-pressed="false">Remote</button>
+        <button class="segment-button" type="button" data-location="relocation" aria-pressed="false">Relocation</button>
       </fieldset>
-      <select class="filter-select" id="tierFilter" aria-label="지원 우선순위">
-        <option value="all">모든 우선순위</option><option value="precision">정밀 지원</option><option value="volume">일괄 지원</option><option value="remote_bonus">리모트 보너스</option><option value="relocation">이전 고려</option>
+      <select class="filter-select" id="tierFilter" aria-label="Priority">
+        <option value="all">All priorities</option><option value="precision">Precision</option><option value="volume">Volume</option><option value="remote_bonus">Remote bonus</option><option value="relocation">Relocation</option>
       </select>
-      <select class="filter-select" id="statusFilter" aria-label="지원 상태">
-        <option value="all">모든 상태</option><option value="discovered">발견</option><option value="materials_ready">지원 준비</option><option value="applied">지원 완료</option><option value="interview">인터뷰</option><option value="offer">오퍼</option><option value="rejected">불합격</option><option value="dropped">보류</option>
+      <select class="filter-select" id="statusFilter" aria-label="Application status">
+        <option value="all">All statuses</option><option value="discovered">Discovered</option><option value="materials_ready">Ready</option><option value="applied">Applied</option><option value="interview">Interview</option><option value="offer">Offer</option><option value="rejected">Rejected</option><option value="dropped">Dropped</option>
       </select>
     </div>
     <div class="role-list" id="roleList"></div>
-    <div class="empty" id="empty"><strong>조건에 맞는 공고가 없어요.</strong>검색어나 필터를 바꿔보세요.</div>
+    <div class="empty" id="empty"><strong>No postings match.</strong>Try a different search or filter.</div>
   </section>
 
   <details class="automation">
     <summary>
       <span class="automation-summary-copy">
         <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg></span>
-        <span class="automation-summary-text"><span>지원 자동화</span><span class="automation-subtitle">연결된 큐는 검토가 필요한 지점에서 멈춥니다.</span></span>
+        <span class="automation-summary-text"><span>Application automation</span><span class="automation-subtitle">A connected queue pauses wherever review is needed.</span></span>
       </span>
       <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m7 9 5 5 5-5"/></svg>
     </summary>
-    <p class="automation-state" id="automationState"><strong>로컬 스크래치 모드</strong> · 자동화와 API 요청은 꺼져 있습니다. 지원 열기는 외부 공고 페이지로만 이동합니다.</p>
+    <p class="automation-state" id="automationState"><strong>Local scratch mode</strong> · Automation and API requests are off. Opening a posting only navigates to the external page.</p>
     <p class="storage-warning" id="storageWarning" role="status" hidden></p>
     <div class="automation-grid">
-      <article class="automation-card"><h3>큐 상태</h3><p id="queueStatus">오프라인 · 대기 중인 작업 없음</p><span class="auto-state" id="queueStateLabel">로컬 전용</span></article>
-      <article class="automation-card"><h3>킬 스위치</h3><p id="killSwitchStatus">오프라인에서는 자동화를 시작할 수 없습니다.</p><span class="auto-state" id="killSwitchLabel">잠김</span></article>
-      <article class="automation-card"><h3>오늘의 할당량</h3><p id="dailyQuota">연결하면 일일 큐 한도가 표시됩니다.</p><span class="auto-state" id="quotaLabel">오프라인</span></article>
-      <article class="automation-card"><h3>확인 필요</h3><p id="checkpointMessage">이 모드에서는 체크포인트가 없습니다.</p><span class="auto-state" id="checkpointLabel">대기</span></article>
+      <article class="automation-card"><h3>Queue status</h3><p id="queueStatus">Offline · no pending jobs</p><span class="auto-state" id="queueStateLabel">Local only</span></article>
+      <article class="automation-card"><h3>Kill switch</h3><p id="killSwitchStatus">Automation cannot start while offline.</p><span class="auto-state" id="killSwitchLabel">Locked</span></article>
+      <article class="automation-card"><h3>Today's quota</h3><p id="dailyQuota">Connect to see the daily queue limit.</p><span class="auto-state" id="quotaLabel">Offline</span></article>
+      <article class="automation-card"><h3>Needs review</h3><p id="checkpointMessage">No checkpoints in this mode.</p><span class="auto-state" id="checkpointLabel">Idle</span></article>
     </div>
   </details>
-  <footer>__GENERATED_AT__ 기준 · jobs/tracker.json · 브라우저 상태는 이동 전 내보내기</footer>
+  <footer>As of __GENERATED_AT__ · jobs/tracker.json · export browser state before switching browsers</footer>
 </main>
 
 <dialog id="roleDialog" aria-labelledby="dialogTitle">
   <div class="sheet">
     <div class="sheet-head">
       <div><div class="sheet-kicker" id="dialogCompany"></div><h2 class="sheet-title" id="dialogTitle"></h2></div>
-      <button class="icon-button" id="closeDialog" type="button" aria-label="상세 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      <button class="icon-button" id="closeDialog" type="button" aria-label="Close details"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
     </div>
     <div id="dialogContent"></div>
   </div>
@@ -536,7 +536,7 @@ function storageOperation(operation, fallback) {
   try {
     return operation();
   } catch (error) {
-    setStorageWarning('브라우저 저장소를 사용할 수 없어 상태 변경은 이 페이지 메모리에만 유지됩니다. 내장 데이터는 변경되지 않았습니다.');
+    setStorageWarning('Browser storage is unavailable; status changes persist only in this page. Embedded data is unchanged.');
     return fallback;
   }
 }
@@ -553,7 +553,7 @@ function loadSavedStatuses() {
     if (entries.some(([id, status]) => !roleIds.has(id) || !statusOptions.includes(status))) throw new Error('invalid status');
     return Object.fromEntries(entries);
   } catch (error) {
-    setStorageWarning('저장된 브라우저 상태를 안전하게 초기화했습니다. 내장 데이터는 변경되지 않았습니다.');
+    setStorageWarning('Stored browser state was safely reset. Embedded data is unchanged.');
     removeStoredStatuses();
     return {};
   }
@@ -574,9 +574,9 @@ const pollIntervalMs = 3000;
 const maxReconnectDelayMs = 30000;
 const queueInFlight = new Set();
 const labels = {
-  discovered:'발견', materials_ready:'지원 준비', applied:'지원 완료', interview:'인터뷰', offer:'오퍼', rejected:'불합격', dropped:'보류',
-  queued:'대기열', running:'실행 중', paused:'사용자 확인 대기', awaiting_user:'사용자 확인 대기', manual_follow_up:'수동 후속 조치',
-  precision:'정밀 지원', volume:'일괄 지원', remote_bonus:'리모트 보너스', relocation:'이전 고려'
+  discovered:'Discovered', materials_ready:'Ready', applied:'Applied', interview:'Interview', offer:'Offer', rejected:'Rejected', dropped:'Dropped',
+  queued:'Queued', running:'Running', paused:'Awaiting user', awaiting_user:'Awaiting user', manual_follow_up:'Manual follow-up',
+  precision:'Precision', volume:'Volume', remote_bonus:'Remote bonus', relocation:'Relocation'
 };
 const icons = {
   document:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v5h5M10 13h5M10 17h5"/></svg>',
@@ -588,7 +588,7 @@ const currentStatus = role => isConnected ? connectedRoles[role.id]?.status : (s
 const automationFor = role => connectedRoles[role.id]?.automation || {};
 const isLocal = role => !['remote_bonus','relocation'].includes(role.tier);
 const pathUrl = path => path.split('/').map(encodeURIComponent).join('/');
-const formatDate = value => value ? new Intl.DateTimeFormat('ko-KR',{month:'short',day:'numeric'}).format(new Date(value + 'T00:00:00')) : '날짜 미상';
+const formatDate = value => value ? new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric'}).format(new Date(value + 'T00:00:00')) : 'No date';
 const labelFor = value => labels[value] || String(value ?? '').replaceAll('_',' ');
 const workerState = worker => worker?.state === 'running' && worker.automatic_progress === true && worker.can_queue === true ? 'running' : worker?.state === 'manual' && worker.automatic_progress === false && worker.can_queue === true ? 'manual' : worker?.state === 'unavailable' && worker.automatic_progress === false && worker.can_queue === false ? 'unavailable' : null;
 const hasQueueAuthority = () => isConnected && snapshot?.automation?.fixture_mode === true && snapshot?.automation?.kill_switch_active === false && typeof snapshot?.catalog_revision === 'string' && snapshot.catalog_revision.trim() !== '' && ['running','manual'].includes(workerState(snapshot?.worker));
@@ -601,8 +601,8 @@ const safeExternalUrl = value => {
     return null;
   }
 };
-const safeConnectionMessage = '로컬 fixture 서비스에 연결하지 못했어요. 읽기 전용으로 전환합니다.';
-const safeQueueMessage = 'fixture 큐 요청이 거부되었습니다. 실제 지원서는 제출되지 않았습니다.';
+const safeConnectionMessage = 'Could not reach the local fixture service. Switching to read-only.';
+const safeQueueMessage = 'The fixture queue request was rejected. No real application was submitted.';
 const resumePdfName = __RESUME_PDF_NAME__;
 const materialUrl = role => isConnected ? `/api/v1/materials/${encodeURIComponent(role.id)}` : `${pathUrl(role.application_dir)}/${encodeURIComponent(resumePdfName)}`;
 
@@ -620,12 +620,12 @@ function setStatus(id, status, announce = true) {
   saved[id] = status;
   writeStoredStatuses();
   renderAll();
-  if (announce && role) showToast(`${role.company} 상태를 '${labelFor(status)}'로 바꿨어요.`);
+  if (announce && role) showToast(`${role.company} status changed to '${labelFor(status)}'.`);
 }
 function statusSelect(role, className = 'status-select') {
-  const disabled = !staticMode || isConnected ? ' disabled title="읽기 전용 서비스 상태입니다."' : '';
+  const disabled = !staticMode || isConnected ? ' disabled title="Read-only while in service mode."' : '';
   const options = statusOptions.map(status => `<option value="${status}" ${currentStatus(role) === status ? 'selected' : ''}>${labelFor(status)}</option>`).join('');
-  return `<select class="${className}" data-status-id="${esc(role.id)}" aria-label="${esc(role.company)} ${esc(role.title)} 지원 상태"${disabled}>${options}</select>`;
+  return `<select class="${className}" data-status-id="${esc(role.id)}" aria-label="${esc(role.company)} ${esc(role.title)} application status"${disabled}>${options}</select>`;
 }
 function commandState(role) {
   const state = automationFor(role).state;
@@ -634,15 +634,15 @@ function commandState(role) {
 function queueControl(role, className = 'queue-button') {
   if (!hasQueueAuthority() || currentStatus(role) !== 'materials_ready') return '';
   const state = commandState(role);
-  if (state) return `<span class="${className}" aria-label="자동화 상태 ${esc(labelFor(state))}">${esc(labelFor(state))}</span>`;
-  return `<span class="fixture-queue"><button class="${className}" type="button" data-queue-role="${esc(role.id)}">fixture 큐에 추가 (제출 안 함)</button><small>fixture 전용 · 실제 지원서는 제출되지 않습니다.</small></span>`;
+  if (state) return `<span class="${className}" aria-label="Automation state ${esc(labelFor(state))}">${esc(labelFor(state))}</span>`;
+  return `<span class="fixture-queue"><button class="${className}" type="button" data-queue-role="${esc(role.id)}">Add to fixture queue (does not submit)</button><small>Fixture only · no real application is submitted.</small></span>`;
 }
 function externalApply(role, className = 'primary-button') {
   const url = safeExternalUrl(role.apply_url);
-  if (!url) return `<span class="${className}" aria-disabled="true" title="유효한 HTTP(S) 지원 링크가 없습니다.">지원 링크 없음</span>`;
+  if (!url) return `<span class="${className}" aria-disabled="true" title="No valid HTTP(S) apply link.">No apply link</span>`;
   const rowAction = className.includes('row-action');
-  const label = rowAction ? icons.arrow : `공고 페이지 열기 ${icons.arrow}`;
-  return `<a class="${className} application-link" href="${esc(url)}" target="_blank" rel="noopener" aria-label="${esc(role.company)} 공고 페이지 열기" title="공고 페이지 열기">${label}</a>`;
+  const label = rowAction ? icons.arrow : `Open posting ${icons.arrow}`;
+  return `<a class="${className} application-link" href="${esc(url)}" target="_blank" rel="noopener" aria-label="Open ${esc(role.company)} posting page" title="Open posting page">${label}</a>`;
 }
 function renderAutomationSurface() {
   if (!isConnected) return;
@@ -652,37 +652,37 @@ function renderAutomationSurface() {
   const automation = snapshot.automation;
   const state = workerState(snapshot.worker);
   if (!state) return resetOfflineSurface();
-  const workerLabel = state === 'running' ? '자동 진행' : state === 'manual' ? '수동 진행' : '사용 불가';
-  document.getElementById('modeLabel').textContent = `연결됨 · 로컬 서비스 · fixture · ${workerLabel}`;
+  const workerLabel = state === 'running' ? 'Automatic' : state === 'manual' ? 'Manual' : 'Unavailable';
+  document.getElementById('modeLabel').textContent = `Connected · local service · fixture · ${workerLabel}`;
   document.getElementById('modeLabel').classList.add('connected');
-  document.getElementById('statusStorageCopy').textContent = state === 'running' ? 'fixture 서비스가 대기열을 자동으로 진행합니다. 실제 지원 기록이 아닙니다.' : state === 'manual' ? 'fixture 서비스가 연결되어 있지만 작업 진행은 수동입니다. 실제 지원 기록이 아닙니다.' : 'fixture 작업자를 사용할 수 없어 대기열을 추가할 수 없습니다. 실제 지원 기록이 아닙니다.';
+  document.getElementById('statusStorageCopy').textContent = state === 'running' ? 'The fixture service advances the queue automatically. Not a real application record.' : state === 'manual' ? 'The fixture service is connected but job progress is manual. Not a real application record.' : 'The fixture worker is unavailable; nothing can be queued. Not a real application record.';
   document.getElementById('automationState').classList.add('connected');
-  document.getElementById('automationState').textContent = pause ? `확인 필요: ${pause.stage} · ${pause.reason} · ${pause.checkpoint_id}` : 'fixture 전용 · 실제 제공자에 제출하지 않으며, 큐 결과는 실제 지원 증거가 아닙니다.';
-  setText('queueStatus', active.length ? `${active.length}개 fixture 작업 · ${active.map(item => labelFor(item.automation.state)).join(', ')}` : `대기 중인 fixture 작업 없음 · ${workerLabel}`);
-  setText('queueStateLabel', hasQueueAuthority() ? `${workerLabel} 가능` : '대기열 사용 불가');
-  setText('killSwitchStatus', automation.kill_switch_active ? '활성화됨 · 새 fixture 작업이 중지됩니다.' : '비활성화됨 · fixture 작업만 허용됩니다.');
-  setText('killSwitchLabel', automation.kill_switch_active ? '중지됨' : 'fixture');
+  document.getElementById('automationState').textContent = pause ? `Needs review: ${pause.stage} · ${pause.reason} · ${pause.checkpoint_id}` : 'Fixture only · nothing is submitted to real providers, and queue results are not evidence of real applications.';
+  setText('queueStatus', active.length ? `${active.length} fixture job(s) · ${active.map(item => labelFor(item.automation.state)).join(', ')}` : `No pending fixture jobs · ${workerLabel}`);
+  setText('queueStateLabel', hasQueueAuthority() ? `${workerLabel} ready` : 'Queue unavailable');
+  setText('killSwitchStatus', automation.kill_switch_active ? 'Active · new fixture jobs are halted.' : 'Inactive · only fixture jobs are allowed.');
+  setText('killSwitchLabel', automation.kill_switch_active ? 'Halted' : 'fixture');
   const quota = automation.daily_quota;
-  setText('dailyQuota', quota ? `오늘 ${quota.used || 0} / ${quota.limit || 0}` : 'fixture 서비스에서 일일 한도를 관리합니다.');
-  setText('quotaLabel', quota ? 'fixture 할당량' : 'fixture 관리');
-  setText('checkpointMessage', checkpoint ? `${checkpoint}을 검토하고 수동으로 진행하세요.` : '체크포인트 없음 · fixture는 실제 지원서를 제출하지 않습니다.');
-  setText('checkpointLabel', checkpoint ? '행동 필요' : 'fixture 대기');
+  setText('dailyQuota', quota ? `Today ${quota.used || 0} / ${quota.limit || 0}` : 'The fixture service manages the daily limit.');
+  setText('quotaLabel', quota ? 'Fixture quota' : 'Fixture managed');
+  setText('checkpointMessage', checkpoint ? `Review ${checkpoint} and proceed manually.` : 'No checkpoints · the fixture never submits real applications.');
+  setText('checkpointLabel', checkpoint ? 'Action needed' : 'Fixture idle');
 }
 function resetOfflineSurface() {
   const disconnected = !staticMode;
-  document.getElementById('modeLabel').textContent = disconnected ? '연결 끊김 · 읽기 전용' : '로컬 스크래치 모드';
+  document.getElementById('modeLabel').textContent = disconnected ? 'Disconnected · read-only' : 'Local scratch mode';
   document.getElementById('modeLabel').classList.remove('connected');
-  document.getElementById('statusStorageCopy').textContent = disconnected ? '서비스 연결이 복구될 때까지 내장 데이터만 읽습니다. 로컬 상태를 변경하지 않습니다.' : '상태 변경은 이 브라우저에만 저장되며 실제 지원 기록이 아닙니다.';
+  document.getElementById('statusStorageCopy').textContent = disconnected ? 'Reading embedded data only until the service connection recovers. Local state is not modified.' : 'Status changes are saved only in this browser and are not real application records.';
   document.getElementById('automationState').classList.remove('connected');
-  document.getElementById('automationState').innerHTML = disconnected ? '<strong>연결 끊김 · 읽기 전용</strong> · 자동화와 상태 변경은 사용할 수 없습니다.' : '<strong>로컬 스크래치 모드</strong> · 자동화와 API 요청은 꺼져 있으며, 상태 변경은 실제 지원 기록이 아닙니다.';
-  setText('queueStatus', '오프라인 · 대기 중인 작업 없음');
-  setText('queueStateLabel', disconnected ? '읽기 전용' : '로컬 전용');
-  setText('killSwitchStatus', '오프라인에서는 자동화를 시작할 수 없습니다.');
-  setText('killSwitchLabel', '잠김');
-  setText('dailyQuota', disconnected ? '연결이 복구될 때까지 읽기 전용입니다.' : '정적 파일에서는 할당량을 사용할 수 없습니다.');
-  setText('quotaLabel', '오프라인');
-  setText('checkpointMessage', '이 모드에서는 체크포인트가 없습니다.');
-  setText('checkpointLabel', '대기');
+  document.getElementById('automationState').innerHTML = disconnected ? '<strong>Disconnected · read-only</strong> · Automation and status changes are unavailable.' : '<strong>Local scratch mode</strong> · Automation and API requests are off; status changes are not real application records.';
+  setText('queueStatus', 'Offline · no pending jobs');
+  setText('queueStateLabel', disconnected ? 'Read-only' : 'Local only');
+  setText('killSwitchStatus', 'Automation cannot start while offline.');
+  setText('killSwitchLabel', 'Locked');
+  setText('dailyQuota', disconnected ? 'Read-only until the connection recovers.' : 'Quota is unavailable from a static file.');
+  setText('quotaLabel', 'Offline');
+  setText('checkpointMessage', 'No checkpoints in this mode.');
+  setText('checkpointLabel', 'Idle');
   document.getElementById('resetBtn').hidden = disconnected;
   const warning = document.getElementById('storageWarning');
   warning.hidden = !storageWarning;
@@ -760,7 +760,7 @@ async function queueApplication(id) {
   if (!role || currentStatus(role) !== 'materials_ready') return;
   queueInFlight.add(id);
   const key = idempotencyKey(role);
-  document.querySelectorAll(`[data-queue-role="${CSS.escape(id)}"]`).forEach(button => { button.disabled = true; button.textContent = '큐에 추가 중…'; });
+  document.querySelectorAll(`[data-queue-role="${CSS.escape(id)}"]`).forEach(button => { button.disabled = true; button.textContent = 'Queuing…'; });
   try {
     const response = await fetch(`/api/v1/roles/${encodeURIComponent(id)}/commands`, {
       method:'POST',
@@ -776,7 +776,7 @@ async function queueApplication(id) {
     connectedRoles[id] = {...(connectedRoles[id] || {}), automation:{...(automationFor(role)), state:queueState, command_id:command.id}};
     renderAll();
     renderAutomationSurface();
-    showToast(`${role.company} fixture 작업을 큐에 추가했어요. 실제 지원서는 제출되지 않습니다.`);
+    showToast(`Queued a fixture job for ${role.company}. No real application was submitted.`);
   } catch (error) {
     renderAll();
     showToast(safeQueueMessage);
@@ -789,7 +789,7 @@ function isPending(role) {
 }
 function renderIntro() {
   const ready = roles.filter(isPending).length;
-  document.getElementById('introCopy').textContent = `수집한 공고 중 ${ready}개가 지원 준비 완료예요. 가장 가능성 높은 한 곳부터 끝내세요.`;
+  document.getElementById('introCopy').textContent = `${ready} collected posting(s) are ready to apply. Finish the most promising one first.`;
 }
 function nextRole() {
   return roles.filter(role => currentStatus(role) === 'materials_ready' && role.tier !== 'relocation').sort((a,b) => Number(isLocal(b)) - Number(isLocal(a)) || b.score - a.score || b.posted.localeCompare(a.posted))[0];
@@ -798,14 +798,14 @@ function renderSpotlight() {
   const role = nextRole();
   const container = document.getElementById('spotlight');
   if (!role) {
-    container.innerHTML = '<div class="spotlight-grid"><div><div class="spotlight-kicker"><span class="live-dot"></span>오늘의 우선순위</div><h2>준비된 지원을 모두 마쳤어요.</h2><p class="spotlight-reason">새 공고를 수집하거나 인터뷰 준비로 넘어가세요.</p></div></div>';
+    container.innerHTML = '<div class="spotlight-grid"><div><div class="spotlight-kicker"><span class="live-dot"></span>Today\'s priority</div><h2>All prepared applications are done.</h2><p class="spotlight-reason">Collect new postings or move on to interview prep.</p></div></div>';
     return;
   }
-  container.innerHTML = `<div class="spotlight-grid"><div><div class="spotlight-kicker"><span class="live-dot"></span>가장 먼저 지원할 공고 · 적합도 ${esc(role.score)}</div><div class="spotlight-company">${esc(role.company)}</div><h2>${esc(role.title)}</h2><p class="spotlight-reason">${esc(role.match)}</p><div class="spotlight-meta"><span class="glass-chip">${esc(role.location)}</span><span class="glass-chip">${esc(role.work_model)}</span><span class="glass-chip">${esc(role.salary)}</span></div></div><div class="spotlight-actions">${queueControl(role, 'primary-button') || externalApply(role, 'primary-button')}<button class="secondary-button" type="button" data-open-role="${esc(role.id)}">자료 확인</button><a class="secondary-button" href="${esc(materialUrl(role))}">PDF 이력서</a></div></div>`;
+  container.innerHTML = `<div class="spotlight-grid"><div><div class="spotlight-kicker"><span class="live-dot"></span>Apply to this first · fit ${esc(role.score)}</div><div class="spotlight-company">${esc(role.company)}</div><h2>${esc(role.title)}</h2><p class="spotlight-reason">${esc(role.match)}</p><div class="spotlight-meta"><span class="glass-chip">${esc(role.location)}</span><span class="glass-chip">${esc(role.work_model)}</span><span class="glass-chip">${esc(role.salary)}</span></div></div><div class="spotlight-actions">${queueControl(role, 'primary-button') || externalApply(role, 'primary-button')}<button class="secondary-button" type="button" data-open-role="${esc(role.id)}">View materials</button><a class="secondary-button" href="${esc(materialUrl(role))}">Resume PDF</a></div></div>`;
 }
 function renderMetrics() {
   const stage = status => roles.filter(role => currentStatus(role) === status).length;
-  const items = [[stage('discovered'), '수집', ''],[stage('materials_ready'), '준비 완료', ''],[stage('applied'), '지원 완료', 'green'],[stage('interview'), '인터뷰', 'purple'],[stage('offer'), '오퍼', 'orange']];
+  const items = [[stage('discovered'), 'Discovered', ''],[stage('materials_ready'), 'Ready', ''],[stage('applied'), 'Applied', 'green'],[stage('interview'), 'Interview', 'purple'],[stage('offer'), 'Offer', 'orange']];
   document.getElementById('metrics').innerHTML = items.map(([value,label,tone]) => `<article class="metric"><div class="metric-top"><div class="metric-value">${value}</div><div class="metric-icon ${tone}">${icons.detail}</div></div><div class="metric-label">${label}</div></article>`).join('');
 }
 function roleMatches(role) {
@@ -822,7 +822,7 @@ function renderRoles() {
   document.getElementById('roleList').innerHTML = filtered.map(role => {
     const scoreClass = role.score >= 8 ? 'high' : role.score < 7 ? 'low' : '';
     const queue = queueControl(role);
-    return `<article class="role-row"><div class="score-ring ${scoreClass}" aria-label="적합도 ${esc(role.score)}">${esc(role.score)}</div><div class="role-copy"><div class="role-company">${esc(role.company)}</div><div class="role-title">${esc(role.title)}</div><div class="role-match">${esc(role.match)}</div></div><div class="meta-stack"><div class="meta-primary">${esc(role.location)}</div><div class="meta-secondary">${esc(role.work_model)} · ${esc(role.salary === 'Not disclosed' ? '연봉 미공개' : role.salary)}</div></div>${statusSelect(role)}<div class="row-actions"><a class="row-action material-link" href="${esc(materialUrl(role))}" aria-label="${esc(role.company)} 지원 자료 열기" title="지원 자료 열기">${icons.document}</a>${queue || externalApply(role, 'row-action')}<button class="row-action" type="button" data-open-role="${esc(role.id)}" aria-label="${esc(role.company)} 공고 상세" title="공고 상세">${icons.detail}</button></div></article>`;
+    return `<article class="role-row"><div class="score-ring ${scoreClass}" aria-label="Fit ${esc(role.score)}">${esc(role.score)}</div><div class="role-copy"><div class="role-company">${esc(role.company)}</div><div class="role-title">${esc(role.title)}</div><div class="role-match">${esc(role.match)}</div></div><div class="meta-stack"><div class="meta-primary">${esc(role.location)}</div><div class="meta-secondary">${esc(role.work_model)} · ${esc(role.salary)}</div></div>${statusSelect(role)}<div class="row-actions"><a class="row-action material-link" href="${esc(materialUrl(role))}" aria-label="Open ${esc(role.company)} materials" title="Open materials">${icons.document}</a>${queue || externalApply(role, 'row-action')}<button class="row-action" type="button" data-open-role="${esc(role.id)}" aria-label="${esc(role.company)} posting details" title="Posting details">${icons.detail}</button></div></article>`;
   }).join('');
 }
 function bindDynamicControls() {
@@ -835,7 +835,7 @@ function openRole(id) {
   if (!role) return;
   document.getElementById('dialogCompany').textContent = role.company;
   document.getElementById('dialogTitle').textContent = role.title;
-  document.getElementById('dialogContent').innerHTML = `<div class="sheet-body"><div class="sheet-score"><strong>${esc(role.score)}</strong><span>/ 10 적합도</span></div><div class="detail-grid"><div class="detail-cell"><div class="detail-label">근무지</div><div class="detail-value">${esc(role.location)}</div></div><div class="detail-cell"><div class="detail-label">근무 형태</div><div class="detail-value">${esc(role.work_model)}</div></div><div class="detail-cell"><div class="detail-label">보상</div><div class="detail-value">${esc(role.salary === 'Not disclosed' ? '연봉 미공개' : role.salary)}</div></div><div class="detail-cell"><div class="detail-label">게시일 · 채널</div><div class="detail-value">${formatDate(role.posted)} · ${esc(role.channel)}</div></div></div><div class="detail-section"><h3>왜 잘 맞는지</h3><p>${esc(role.match)}</p></div><div class="detail-section"><h3>요구사항</h3><p>${esc(role.requirements)}</p></div><div class="detail-section"><h3>핵심 기술</h3><div class="keyword-list">${role.keywords.map(keyword => `<span class="keyword">${esc(keyword)}</span>`).join('')}</div></div><div class="detail-section"><h3>지원 상태</h3>${statusSelect(role, 'status-select dialog-status')}</div></div><div class="sheet-actions"><a class="link-button" href="${esc(materialUrl(role))}">PDF</a>${queueControl(role, 'primary-button') || externalApply(role, 'primary-button')}</div>`;
+  document.getElementById('dialogContent').innerHTML = `<div class="sheet-body"><div class="sheet-score"><strong>${esc(role.score)}</strong><span>/ 10 fit</span></div><div class="detail-grid"><div class="detail-cell"><div class="detail-label">Location</div><div class="detail-value">${esc(role.location)}</div></div><div class="detail-cell"><div class="detail-label">Work model</div><div class="detail-value">${esc(role.work_model)}</div></div><div class="detail-cell"><div class="detail-label">Compensation</div><div class="detail-value">${esc(role.salary)}</div></div><div class="detail-cell"><div class="detail-label">Posted · Channel</div><div class="detail-value">${formatDate(role.posted)} · ${esc(role.channel)}</div></div></div><div class="detail-section"><h3>Why it fits</h3><p>${esc(role.match)}</p></div><div class="detail-section"><h3>Requirements</h3><p>${esc(role.requirements)}</p></div><div class="detail-section"><h3>Key skills</h3><div class="keyword-list">${role.keywords.map(keyword => `<span class="keyword">${esc(keyword)}</span>`).join('')}</div></div><div class="detail-section"><h3>Application status</h3>${statusSelect(role, 'status-select dialog-status')}</div></div><div class="sheet-actions"><a class="link-button" href="${esc(materialUrl(role))}">PDF</a>${queueControl(role, 'primary-button') || externalApply(role, 'primary-button')}</div>`;
   const dialog = document.getElementById('roleDialog');
   dialog.showModal();
   bindDynamicControls();
@@ -847,11 +847,11 @@ document.querySelectorAll('[data-location]').forEach(button => button.addEventLi
 document.getElementById('closeDialog').addEventListener('click', () => document.getElementById('roleDialog').close());
 document.getElementById('roleDialog').addEventListener('click', event => { if (event.target === event.currentTarget) event.currentTarget.close(); });
 document.getElementById('resetBtn').addEventListener('click', () => {
-  if (!confirm('이 브라우저에 저장된 지원 상태 변경을 초기화할까요?')) return;
+  if (!confirm('Reset the application status changes saved in this browser?')) return;
   saved = {};
   removeStoredStatuses();
   renderAll();
-  showToast('저장된 상태를 초기화했어요.');
+  showToast('Saved statuses were reset.');
 });
 document.getElementById('exportBtn').addEventListener('click', () => {
   const output = {
@@ -867,7 +867,7 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   anchor.download = isConnected ? 'fixture-status-export.json' : 'scratch-status-export.json';
   anchor.click();
   URL.revokeObjectURL(anchor.href);
-  showToast(isConnected ? 'fixture 상태 파일을 저장했어요. 실제 지원 기록이 아닙니다.' : '스크래치 상태 파일을 저장했어요. 실제 지원 기록이 아닙니다.');
+  showToast(isConnected ? 'Saved the fixture status file. Not a real application record.' : 'Saved the scratch status file. Not a real application record.');
 });
 renderAll();
 resetOfflineSurface();

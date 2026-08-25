@@ -54,7 +54,7 @@ def test_generated_dashboard_matches_builder_and_safely_embeds_json() -> None:
     collision_fixture = {**fixture, "generated_at": "__JOB_DATA__", "note": "__JOB_DATA__ __GENERATED_AT__"}
     collision_page = module.render_dashboard(collision_fixture)
     assert embedded_data(collision_page) == collision_fixture
-    assert "<footer>__JOB_DATA__ 기준" in collision_page
+    assert "<footer>As of __JOB_DATA__" in collision_page
 
     generated = DASHBOARD_PATH.read_text(encoding="utf-8")
     canonical = json.loads(module.DATA_PATH.read_text(encoding="utf-8"))
@@ -116,7 +116,7 @@ function runtime({protocol="http:",storage,fetch}) {
     if(opt?.method==="POST"){posts++;const key=opt.headers["Idempotency-Key"];if(!keys.has(key)){keys.set(key,"command-1");enqueues++;if(loseResponse){loseResponse=false;return Promise.reject(Error("lost response"))}}return Promise.resolve({ok:true,json:async()=>({state:"accepted",id:keys.get(key)})})}
     return Promise.resolve(responses.shift());
   }});
-  for(const [state,copy] of [["running","자동 진행"],["manual","수동 진행"],["unavailable","사용 불가"]]) {
+  for(const [state,copy] of [["running","Automatic"],["manual","Manual"],["unavailable","Unavailable"]]) {
     responses=[{ok:true,json:async()=>({csrf_token:"csrf",fixture_mode:true})},{ok:true,json:async()=>snap(state)}];
     await connected.ctx.d.loadConnectedState();
     if(!connected.ctx.d.mode.includes(copy))throw Error("worker "+state);
@@ -124,7 +124,7 @@ function runtime({protocol="http:",storage,fetch}) {
   }
   responses=[{ok:true,json:async()=>({csrf_token:"csrf",fixture_mode:true})},{ok:true,json:async()=>snap("manual",true)}];
   await connected.ctx.d.loadConnectedState();
-  if(connected.ctx.d.queueControl(role)!==""||connected.ctx.d.queue!=="대기열 사용 불가")throw Error("kill switch");
+  if(connected.ctx.d.queueControl(role)!==""||connected.ctx.d.queue!=="Queue unavailable")throw Error("kill switch");
   connected.nodes.get("exportBtn").handlers.click();
   if(JSON.parse(connected.exported).provenance.canonical_real_application_record!==false)throw Error("export provenance");
   await connected.ctx.d.queueApplication("role");
@@ -228,9 +228,9 @@ def test_dashboard_fails_closed_to_fixture_only_connected_mode() -> None:
     assert "body:JSON.stringify({mode:'batch',idempotency_key:key})" in page
     assert "mode:'fill_only'" not in page
     assert "credentials:'same-origin', cache:'no-store'" in page
-    assert "fixture 전용 · 실제 제공자에 제출하지 않으며, 큐 결과는 실제 지원 증거가 아닙니다." in page
-    assert "fixture 큐에 추가 (제출 안 함)" in page
-    assert "fixture 전용 · 실제 지원서는 제출되지 않습니다." in page
+    assert "Fixture only · nothing is submitted to real providers, and queue results are not evidence of real applications." in page
+    assert "Add to fixture queue (does not submit)" in page
+    assert "Fixture only · no real application is submitted." in page
     assert "provenance: isConnected" in page
     assert "canonical_real_application_record:false" in page
 
@@ -239,9 +239,9 @@ def test_dashboard_disconnect_is_read_only_and_errors_are_sanitized() -> None:
     page = DASHBOARD_PATH.read_text(encoding="utf-8")
 
     assert "const disconnected = !staticMode;" in page
-    assert "연결 끊김 · 읽기 전용" in page
-    assert "자동화와 상태 변경은 사용할 수 없습니다." in page
-    assert "서비스 연결이 복구될 때까지 내장 데이터만 읽습니다. 로컬 상태를 변경하지 않습니다." in page
+    assert "Disconnected · read-only" in page
+    assert "Automation and status changes are unavailable." in page
+    assert "Reading embedded data only until the service connection recovers. Local state is not modified." in page
     assert "if (!staticMode || isConnected) return;" in page
     assert "safeConnectionMessage" in page
     assert "safeQueueMessage" in page
@@ -255,10 +255,10 @@ def test_dashboard_row_links_are_named_and_accessible() -> None:
     assert "material-link" in page
     assert "application-link" in page
     assert "resume-link" not in page
-    assert 'aria-label="${esc(role.company)} 지원 자료 열기"' in page
-    assert 'title="지원 자료 열기"' in page
-    assert 'aria-label="${esc(role.company)} 공고 페이지 열기"' in page
-    assert 'title="공고 페이지 열기"' in page
+    assert 'aria-label="Open ${esc(role.company)} materials"' in page
+    assert 'title="Open materials"' in page
+    assert 'aria-label="Open ${esc(role.company)} posting page"' in page
+    assert 'title="Open posting page"' in page
 
 
 def test_service_and_capabilities_default_to_fixture_only_authority() -> None:
