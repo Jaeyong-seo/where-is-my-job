@@ -8,6 +8,7 @@ the example files so a fresh clone runs end to end before you configure anything
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +23,21 @@ MASTER_RESUME_TEMPLATE_PATH = ROOT / "profile" / "master-resume.md"
 EXAMPLE_MASTER_RESUME_TEMPLATE_PATH = ROOT / "profile" / "master-resume.example.md"
 
 
+_warned_fallbacks: set[Path] = set()
+
+
+def _warn_fallback(path: Path, example: Path) -> None:
+    if path in _warned_fallbacks:
+        return
+    _warned_fallbacks.add(path)
+    print(
+        f"[user_config] {path.relative_to(ROOT)} not found — falling back to "
+        f"{example.relative_to(ROOT)} (Jane Doe placeholder). Copy the example "
+        "and personalize it before building real materials, or run /initial-setup.",
+        file=sys.stderr,
+    )
+
+
 def _load_with_fallback(path: Path, example: Path) -> dict[str, Any]:
     source = path if path.exists() else example
     if not source.exists():
@@ -29,6 +45,8 @@ def _load_with_fallback(path: Path, example: Path) -> dict[str, Any]:
             f"Missing {path.relative_to(ROOT)} and its example fallback "
             f"{example.relative_to(ROOT)} — restore the example file from git."
         )
+    if source is example:
+        _warn_fallback(path, example)
     return json.loads(source.read_text(encoding="utf-8"))
 
 
@@ -41,11 +59,10 @@ def load_tracks() -> dict[str, Any]:
 
 
 def master_resume_template() -> str:
-    source = (
-        MASTER_RESUME_TEMPLATE_PATH
-        if MASTER_RESUME_TEMPLATE_PATH.exists()
-        else EXAMPLE_MASTER_RESUME_TEMPLATE_PATH
-    )
+    source = MASTER_RESUME_TEMPLATE_PATH
+    if not source.exists():
+        source = EXAMPLE_MASTER_RESUME_TEMPLATE_PATH
+        _warn_fallback(MASTER_RESUME_TEMPLATE_PATH, source)
     return source.read_text(encoding="utf-8")
 
 
