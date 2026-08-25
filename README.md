@@ -4,7 +4,38 @@
 
 공고 수집 → 추적 → 트랙 기반 맞춤 이력서/커버레터 생성 → 대시보드 → (fixture 전용) 로컬 자동화까지 한 리포에서 굴린다. 개인 정보는 전부 `config/`와 `profile/`에 모여 있고, 코드에는 하드코딩이 없다.
 
+## 전체 그림
+
+```mermaid
+flowchart LR
+    subgraph setup["1회 셋업"]
+        CFG["config/<br/>user-profile.json<br/>tracks.json"]
+        TPL["이력서 원본<br/>DOCX / PDF + 좌표"]
+        PRF["profile/<br/>raw · analysis"]
+    end
+    subgraph cycle["매 공고마다 (apply-cycle)"]
+        POST["공고 URL"] --> TRK["jobs/tracker.json<br/>등록·점수화"]
+        TRK --> MAT["맞춤 이력서 +<br/>커버레터 빌드"]
+        MAT --> OUT["applications/회사/포지션/<br/>md · DOCX · PDF"]
+        OUT --> DASH["dashboard.html"]
+        OUT --> MAIL["아웃리치 초안<br/>(발송은 사람이)"]
+    end
+    CFG --> MAT
+    TPL --> MAT
+    PRF --> MAIL
+```
+
 ## 온보딩 (처음 하는 일)
+
+```mermaid
+flowchart LR
+    S1["1️⃣ 프로필 설정<br/>user-profile.example.json<br/>→ user-profile.json"]
+    S2["2️⃣ 트랙 정의<br/>tracks.example.json<br/>→ tracks.json"]
+    S3["3️⃣ 마스터 이력서<br/>DOCX/PDF 경로 지정<br/>+ 좌표 캘리브레이션"]
+    S4["4️⃣ 소스 축적<br/>profile/raw<br/>profile/analysis"]
+    S5["5️⃣ 샘플 교체<br/>tracker.json에<br/>실제 공고 등록"]
+    S1 --> S2 --> S3 --> S4 --> S5
+```
 
 1. **프로필 설정** — `config/user-profile.example.json`을 `config/user-profile.json`으로 복사하고 이름·연락처·타겟 도시·스크리닝 규칙을 채운다. 설정 전에도 모든 도구는 예시 프로필(Jane Doe)로 동작한다.
 2. **트랙 정의** — `config/tracks.example.json`을 `config/tracks.json`으로 복사. 트랙 = 이력서의 한 가지 포지셔닝(headline + summary + 스킬 5줄). JD 성향별로 2~5개 정도로 시작.
@@ -33,6 +64,43 @@ tools/                         # 빌더: 이력서/커버레터/대시보드 + L
 application_automation/        # 로컬 fixture 전용 자동화 서비스 (실제 제출 권한 0)
 .claude/skills/apply-cycle/    # 한 사이클 전체를 정의한 Claude Code 스킬
 discussions/ interviews/       # 의사결정 기록, 면접 준비
+```
+
+## 한 사이클의 흐름 (`/apply-cycle`)
+
+```mermaid
+flowchart TD
+    START(["입력: 공고 URL / ATS id / 힌트"]) --> P0{"URL이 있나?"}
+    P0 -- "힌트만 있음" --> SWEEP["Phase 0 · 디스커버리 스윕<br/>잡보드 + ATS API 검색<br/>screening 규칙으로 필터"]
+    SWEEP --> P1
+    P0 -- "URL 있음" --> P1["Phase 1 · 공고 라이브 검증<br/>ATS API 우선, JD 전문 기록"]
+    P1 -- "죽은 공고" --> DROP(["tracker에 dropped 표기 후 종료"])
+    P1 --> P2["Phase 2 · tracker.json 등록<br/>점수·티어·근거 기록"]
+    P2 --> P3["Phase 3 · 맞춤 이력서<br/>트랙 선택 → build_job_applications.py"]
+    P3 --> P4["Phase 4 · 커버레터 작성<br/>훅 → 근거 → 갭 선언 → 클로즈"]
+    P4 --> P5["Phase 5 · im-not-ai 패스<br/>AI 티 제거 (내용 보존)"]
+    P5 --> P6["Phase 6 · 렌더 + 검증<br/>build_cover_letter.py → 1페이지 확인"]
+    P6 --> P7["Phase 7 · 추적 갱신<br/>jobs/active + jobs.md + 대시보드"]
+    P7 --> P8["Phase 8 · 아웃리치 초안<br/>outreach.md 작성 (발송 금지)"]
+    P8 --> P9["Phase 9 · 커밋 + 전달<br/>job/슬러그 브랜치 → main"]
+    P9 --> END(["사람이 하는 일:<br/>폼 제출 · 메일 발송"])
+```
+
+## 빌드 데이터 흐름
+
+```mermaid
+flowchart LR
+    UP["config/user-profile.json<br/>(정체성·경로·좌표)"] --> BJA
+    TR["config/tracks.json<br/>(headline·summary·스킬 5줄)"] --> BJA
+    MR["profile/master-resume.md<br/>(치환 템플릿)"] --> BJA
+    JT["jobs/tracker.json<br/>(공고·상태)"] --> BJA["build_job_applications.py"]
+    BJA --> APP["applications/회사/포지션/<br/>resume.md · job.md · DOCX · PDF"]
+    CL["cover-letter.md"] --> BCL["build_cover_letter.py"]
+    UP --> BCL
+    BCL --> CLOUT["커버레터 PDF · DOCX"]
+    JT --> BJD["build_job_dashboard.py"]
+    UP --> BJD
+    BJD --> DH["dashboard.html"]
 ```
 
 ## 일상 사용
