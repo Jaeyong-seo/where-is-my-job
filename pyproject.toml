@@ -1,7 +1,8 @@
 [project]
-name = "application-automation"
+name = "where-is-my-job"
 version = "0.1.0"
-description = "Local, safety-bounded job application automation"
+description = "Job-search ops room: tracker, tailored resume/cover-letter builders, dashboard, and fixture-only local application automation"
+license = { file = "LICENSE" }
 requires-python = ">=3.11"
 dependencies = [
   "cryptography==45.0.5",
@@ -14,6 +15,13 @@ dependencies = [
 dev = [
   "pytest>=8.0",
   "httpx2>=2.7,<3",
+]
+# Resume / cover-letter / dashboard builders: uv sync --group builders
+builders = [
+  "pymupdf>=1.24",
+  "lxml>=5.0",
+  "python-docx>=1.1",
+  "reportlab>=4.0",
 ]
 
 [build-system]
