@@ -667,25 +667,25 @@ def test_trusted_clock_computes_vancouver_local_date_across_midnight_and_dst_tra
     after_spring = datetime(2026, 3, 8, 8, 0, 0, tzinfo=timezone.utc)
     assert ApplicationOrchestrator(
         connection, fixture_mode=True, trusted_clock=lambda: before_spring
-    )._trusted_vancouver_date() == "2026-03-07"
+    )._trusted_policy_date() == "2026-03-07"
     assert ApplicationOrchestrator(
         connection, fixture_mode=True, trusted_clock=lambda: after_spring
-    )._trusted_vancouver_date() == "2026-03-08"
+    )._trusted_policy_date() == "2026-03-08"
 
     # Fall-back boundary: 2026-11-01 (Vancouver is still PDT, offset -7, until 2am local later that day).
     before_fall = datetime(2026, 11, 1, 6, 59, 59, tzinfo=timezone.utc)
     after_fall = datetime(2026, 11, 1, 7, 0, 0, tzinfo=timezone.utc)
     assert ApplicationOrchestrator(
         connection, fixture_mode=True, trusted_clock=lambda: before_fall
-    )._trusted_vancouver_date() == "2026-10-31"
+    )._trusted_policy_date() == "2026-10-31"
     assert ApplicationOrchestrator(
         connection, fixture_mode=True, trusted_clock=lambda: after_fall
-    )._trusted_vancouver_date() == "2026-11-01"
+    )._trusted_policy_date() == "2026-11-01"
 
     with pytest.raises(OrchestrationError, match="trusted clock is invalid"):
         ApplicationOrchestrator(
             connection, fixture_mode=True, trusted_clock=lambda: datetime(2026, 3, 8)
-        )._trusted_vancouver_date()
+        )._trusted_policy_date()
     connection.close()
 
 

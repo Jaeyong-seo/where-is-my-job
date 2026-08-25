@@ -10,6 +10,7 @@ from typing import Iterable
 
 from .models import AssertionResolution, CandidateAssertion, ExactAlias, FormField, PauseReason
 from .crypto import canonical_json, domain_hmac, sha256_artifact
+from .region import load_region
 
 @dataclass(frozen=True)
 class _BoundAssertionResolution(AssertionResolution):
@@ -246,10 +247,11 @@ class AssertionRegistry:
             ):
                 return None, PauseReason.SALARY_UNVERIFIED
             return "Negotiable within posted range", None
+        region = load_region()
         location_values = {
-            LOCATION_CITY_KEY: "Vancouver",
-            LOCATION_PROVINCE_KEY: "BC",
-            LOCATION_COUNTRY_KEY: "Canada",
+            LOCATION_CITY_KEY: region.city,
+            LOCATION_PROVINCE_KEY: region.province,
+            LOCATION_COUNTRY_KEY: region.country,
         }
         if semantic_key in location_values:
             expected = location_values[semantic_key]

@@ -29,6 +29,7 @@ from .crypto import domain_hmac, verify_domain_hmac
 from .status import append_event, current_canonical_event
 from .evidence import EvidenceError, append_evidence_event, verify_evidence_ledger
 from .materials import RESUME_NAME_PATTERN
+from .region import load_region
 
 _CHECKPOINT_REASONS = frozenset(reason.value for reason in PauseReason) | frozenset(
     {"daily_cap", "policy_expired", "policy_revoked", "kill_switch", "breaker_open"}
@@ -145,12 +146,12 @@ class ApplicationOrchestrator:
         self._evidence_key = b"application-automation/fixture-evidence-hmac/v1" if fixture_mode else None
         self._trusted_clock: Callable[[], datetime] = trusted_clock or (lambda: datetime.now(timezone.utc))
 
-    def _trusted_vancouver_date(self) -> str:
-        """Return today's Vancouver-local date from the injected trusted clock."""
+    def _trusted_policy_date(self) -> str:
+        """Return today's region-local date from the injected trusted clock."""
         now = self._trusted_clock()
         if not isinstance(now, datetime) or now.tzinfo is None or now.utcoffset() is None:
             raise OrchestrationError("trusted clock is invalid")
-        return now.astimezone(ZoneInfo("America/Vancouver")).date().isoformat()
+        return now.astimezone(ZoneInfo(load_region().timezone)).date().isoformat()
 
     @contextmanager
     def _immediate_transaction(self) -> Generator[None, None, None]:
@@ -250,11 +251,9 @@ class ApplicationOrchestrator:
             country is not None and not isinstance(country, str)
         ):
             raise OrchestrationError("role eligibility data is invalid")
-        in_scope = location in {
-            "Vancouver, BC", "Vancouver", "Metro Vancouver, BC", "Greater Vancouver, BC",
-            "North Vancouver, BC", "West Vancouver, BC", "Burnaby, BC", "Richmond, BC",
-        }
-        if not (in_scope or (remote and country == "Canada")):
+        region = load_region()
+        in_scope = location in region.locations
+        if not (in_scope or (remote and country == region.country)):
             raise OrchestrationError("role is not eligible")
         canonical = info["canonical_identity"]
         if not isinstance(canonical, str) or not canonical or canonical != role["canonical_key"]:
@@ -340,7 +339,7 @@ class ApplicationOrchestrator:
             _fixture_policy_claims(
                 policy_id=policy_id, profile_id=profile_id, scope_json='{"fixture_only":true}',
                 material_policy_json='{"fixture_only":true}', min_fit_score=5, daily_cap=20,
-                timezone_name='America/Vancouver', valid_from=valid_from, expires_at=expires_at,
+                timezone_name=load_region().timezone, valid_from=valid_from, expires_at=expires_at,
                 assertion_id=assertion_id, event_id=event_id, switch_id=switch_id, capability_id=capability_id,
             ),
         )
@@ -349,9 +348,10 @@ class ApplicationOrchestrator:
             "timezone,daily_cap,provider_form_allowlist_json,assertion_snapshot_id,material_policy_json,"
             "checkpoint_classes_json,valid_from,expires_at,global_kill_switch_id,signature_hmac,key_version,"
             "candidate_confirmation_event_id,revision,created_at,environment,fixture_adapter_id,fixture_origin,"
-            "fixture_capability_id) VALUES(?,?,1,'active',?,5,'America/Vancouver',20,?,?,?,?,?,?,?,?,"
+            "fixture_capability_id) VALUES(?,?,1,'active',?,5,?,20,?,?,?,?,?,?,?,?,"
             "1,?,1,?,'fixture','fixture-aside-v1',?,?)",
-            (policy_id, profile_id, '{"fixture_only":true}', '{"fixture_only":true}', assertion_id,
+            (policy_id, profile_id, '{"fixture_only":true}', load_region().timezone,
+             '{"fixture_only":true}', assertion_id,
              '{"fixture_only":true}', '[]', valid_from,
              expires_at, switch_id, policy_signature, event_id, _now(), FIXTURE_DOMAIN, capability_id))
 
@@ -493,7 +493,7 @@ class ApplicationOrchestrator:
         self, profile_id: str, *, provision_fixture: bool = True
     ) -> tuple[sqlite3.Row | None, int, str]:
         policy = self._effective_policy(profile_id, provision_fixture=provision_fixture)
-        local_date = self._trusted_vancouver_date()
+        local_date = self._trusted_policy_date()
         used = 0 if policy is None else self.connection.execute(
             "SELECT COUNT(*) FROM daily_quota_reservations WHERE policy_id=? AND local_date=? "
             "AND state IN ('reserved','consumed')", (policy["id"], local_date)

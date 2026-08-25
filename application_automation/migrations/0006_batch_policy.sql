@@ -1,7 +1,7 @@
 CREATE TABLE batch_policies (
  id TEXT PRIMARY KEY, candidate_profile_id TEXT NOT NULL REFERENCES candidate_profiles(id), policy_version INTEGER NOT NULL CHECK(policy_version >= 1),
  state TEXT NOT NULL CHECK(state IN ('draft','active','revoked','expired','exhausted')), scope_json TEXT NOT NULL CHECK(json_valid(scope_json)),
- min_fit_score REAL NOT NULL CHECK(min_fit_score >= 5 AND min_fit_score <= 10), timezone TEXT NOT NULL CHECK(timezone='America/Vancouver'),
+ min_fit_score REAL NOT NULL CHECK(min_fit_score >= 5 AND min_fit_score <= 10), timezone TEXT NOT NULL CHECK(timezone='{{POLICY_TIMEZONE}}'),
  daily_cap INTEGER NOT NULL CHECK(daily_cap BETWEEN 1 AND 20), provider_form_allowlist_json TEXT NOT NULL CHECK(json_valid(provider_form_allowlist_json)),
  assertion_snapshot_id TEXT NOT NULL REFERENCES candidate_assertions(id), material_policy_json TEXT NOT NULL CHECK(json_valid(material_policy_json)),
  checkpoint_classes_json TEXT NOT NULL CHECK(json_valid(checkpoint_classes_json)), valid_from TEXT NOT NULL, expires_at TEXT NOT NULL,

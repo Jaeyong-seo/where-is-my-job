@@ -6,7 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from application_automation.store import MIGRATIONS_DIR, apply_migrations, connect
+from application_automation.store import MIGRATIONS_DIR, apply_migrations, connect, migration_scripts
+
+# Region-substituted script text, as apply_migrations executes it.
+_SCRIPTS = dict(migration_scripts())
 
 
 NOW = "2026-07-15T00:00:00+00:00"
@@ -243,7 +246,7 @@ def test_upgrade_from_0007_matches_fresh_schema_and_preserves_history(tmp_path: 
     fresh = migrated(tmp_path / "fresh")
     upgraded = connect(tmp_path / "upgraded.sqlite3")
     for version, _ in _MIGRATION_MANIFEST[:3]:
-        upgraded.executescript((MIGRATIONS_DIR / version).read_text(encoding="utf-8"))
+        upgraded.executescript(_SCRIPTS[version])
     upgraded.execute(
         "CREATE TABLE schema_migrations (version TEXT PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, checksum TEXT) STRICT"
     )
@@ -835,15 +838,14 @@ def test_one_active_command_per_application(tmp_path: Path) -> None:
 
 def test_legacy_invalid_rows_block_relational_closure(tmp_path: Path) -> None:
     database = connect(tmp_path / "legacy.sqlite3")
-    first = [MIGRATIONS_DIR / version for version, _ in _MIGRATION_MANIFEST[:2]]
-    for migration in first:
-        database.executescript(migration.read_text(encoding="utf-8"))
+    for version, _ in _MIGRATION_MANIFEST[:2]:
+        database.executescript(_SCRIPTS[version])
     database.execute(
         "CREATE TABLE schema_migrations (version TEXT PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP) STRICT"
     )
     database.executemany(
         "INSERT INTO schema_migrations(version) VALUES(?)",
-        [(migration.name,) for migration in first],
+        [(version,) for version, _ in _MIGRATION_MANIFEST[:2]],
     )
     database.execute(
         "INSERT INTO candidate_profiles VALUES(?,?,?,?,?)",
@@ -875,12 +877,12 @@ def test_legacy_invalid_rows_block_relational_closure(tmp_path: Path) -> None:
         "INSERT INTO actions VALUES(?,?,?,?,?,?,?,?,?,?)",
         ("action", "run", None, "submit", "fill", "planned", None, NOW, None, 1),
     )
-    with pytest.raises(RuntimeError, match=f"migration checksum is missing: {first[0].name}"):
+    with pytest.raises(RuntimeError, match=f"migration checksum is missing: {_MIGRATION_MANIFEST[0][0]}"):
         apply_migrations(database)
     database.execute("ALTER TABLE schema_migrations ADD COLUMN checksum TEXT")
     assert database.execute(
         "SELECT COUNT(*) FROM schema_migrations WHERE checksum IS NULL"
-    ).fetchone()[0] == len(first)
+    ).fetchone()[0] == len(_MIGRATION_MANIFEST[:2])
     database.executemany(
         "UPDATE schema_migrations SET checksum=? WHERE version=?",
         [(checksum, version) for version, checksum in _MIGRATION_MANIFEST[:2]],
@@ -902,7 +904,7 @@ def test_0010_preflight_rolls_back_unbound_run_command(tmp_path: Path) -> None:
     database = connect(tmp_path / "legacy-0009.sqlite3")
     migrations = _MIGRATION_MANIFEST[:5]
     for version, _ in migrations:
-        database.executescript((MIGRATIONS_DIR / version).read_text(encoding="utf-8"))
+        database.executescript(_SCRIPTS[version])
     database.execute(
         "CREATE TABLE schema_migrations (version TEXT PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, checksum TEXT) STRICT"
     )
@@ -1129,7 +1131,7 @@ def test_prior_day_consumed_quota_reservation_survives_relational_preflight(
     database = connect(tmp_path / "legacy-consumed-quota.sqlite3")
     prefix = _MIGRATION_MANIFEST[:5]
     for version, _ in prefix:
-        database.executescript((MIGRATIONS_DIR / version).read_text(encoding="utf-8"))
+        database.executescript(_SCRIPTS[version])
     database.execute(
         "CREATE TABLE schema_migrations (version TEXT PRIMARY KEY, applied_at TEXT NOT NULL "
         "DEFAULT CURRENT_TIMESTAMP, checksum TEXT) STRICT"
@@ -1229,7 +1231,7 @@ def test_prior_day_consumed_quota_reservation_survives_relational_preflight(
 
 def test_apply_migrations_rejects_non_prefix_migration_history(tmp_path: Path) -> None:
     database = connect(tmp_path / "nonprefix.sqlite3")
-    database.executescript((MIGRATIONS_DIR / _MIGRATION_MANIFEST[0][0]).read_text(encoding="utf-8"))
+    database.executescript(_SCRIPTS[_MIGRATION_MANIFEST[0][0]])
     database.execute(
         "CREATE TABLE schema_migrations (version TEXT PRIMARY KEY, applied_at TEXT NOT NULL "
         "DEFAULT CURRENT_TIMESTAMP, checksum TEXT) STRICT"
@@ -1246,7 +1248,7 @@ def test_apply_migrations_rejects_non_prefix_migration_history(tmp_path: Path) -
 
 def test_apply_migrations_rejects_marker_only_migration_history(tmp_path: Path) -> None:
     database = connect(tmp_path / "marker-only.sqlite3")
-    database.executescript((MIGRATIONS_DIR / _MIGRATION_MANIFEST[0][0]).read_text(encoding="utf-8"))
+    database.executescript(_SCRIPTS[_MIGRATION_MANIFEST[0][0]])
     database.execute(
         "CREATE TABLE schema_migrations (version TEXT PRIMARY KEY, applied_at TEXT NOT NULL "
         "DEFAULT CURRENT_TIMESTAMP, checksum TEXT) STRICT"

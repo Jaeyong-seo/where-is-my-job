@@ -17,6 +17,7 @@ from application_automation.api import create_app
 from application_automation.orchestrator import ApplicationOrchestrator, MaterialValidationError, validate_material_file
 from application_automation.store import (
     MIGRATIONS_DIR,
+    migration_scripts,
     ServiceInstanceLock,
     ServiceInstanceLockError,
     apply_migrations,
@@ -94,8 +95,8 @@ def _verify_schema_current(connection: sqlite3.Connection) -> None:
     fails closed rather than silently mutating the database outside owner-lock protection.
     """
     migrations = [
-        (migration.name, hashlib.sha256(migration.read_text(encoding="utf-8").encode("utf-8")).hexdigest())
-        for migration in sorted(MIGRATIONS_DIR.glob("[0-9][0-9][0-9][0-9]_*.sql"))
+        (name, hashlib.sha256(script.encode("utf-8")).hexdigest())
+        for name, script in migration_scripts()
     ]
     try:
         applied = {

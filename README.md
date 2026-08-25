@@ -156,7 +156,7 @@ The current runtime is deterministic-fixture only. `serve`, `queue`, `worker`, a
 - [Current scope of status, projection, and cutover](docs/status-cutover.md)
 - [Threat model and security boundaries](docs/application-automation-threat-model.md)
 
-Known limitation: the automation package's batch policy is currently pinned to the `America/Vancouver` timezone and a Vancouver-area location list (including CHECK constraints in the SQL migrations). Retargeting another region requires editing `application_automation/policy.py`, `models.py`, `store.py`, and `migrations/` together. Everything else — dashboard, builders, the skill — is region-agnostic.
+The automation region (policy timezone, in-scope locations, city/province/country answers) is configured in the `search` block of `config/user-profile.json` and defaults to Vancouver. The timezone is baked into the database's CHECK constraints when migrations run, and migration checksums cover the substituted text — so an existing database refuses to run under a different region (fail closed) rather than silently reinterpreting its daily-cap quotas. To change region, update the config and start a fresh database.
 
 Tests: `pytest tests` runs green on a fresh clone (CI enforces it). A set of inherited fixture-adapter failures is quarantined as `xfail` via `tests/application_automation/known_failures.txt`; fix one and remove its line to bring it back into the count.
 

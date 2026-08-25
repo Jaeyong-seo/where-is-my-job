@@ -7,17 +7,12 @@ from typing import Callable, Iterable, Mapping
 
 from .crypto import canonical_json, sha256_artifact, verify_domain_hmac
 from .assertions import AssertionRegistry
+from .region import load_region
 from .models import (
     AssertionResolution, BatchPolicy, DispatchIntent, EligibilityResult, FillPlan,
     FormSnapshot, MaterialBinding, PauseReason, ProviderFormBinding, RoleEligibility,
     RoleInput, Transport,
 )
-
-VANCOUVER_LOCATIONS = frozenset({
-    "Vancouver, BC", "Vancouver", "Metro Vancouver, BC", "Greater Vancouver, BC",
-    "North Vancouver, BC", "West Vancouver, BC", "Burnaby, BC", "Richmond, BC",
-})
-
 
 def _trusted_now(clock: Callable[[], datetime]) -> datetime:
     now = clock()
@@ -27,7 +22,8 @@ def _trusted_now(clock: Callable[[], datetime]) -> datetime:
 
 
 def role_in_scope(role: RoleInput) -> bool:
-    return role.location in VANCOUVER_LOCATIONS or (role.remote and role.remote_country == "Canada")
+    region = load_region()
+    return role.location in region.locations or (role.remote and role.remote_country == region.country)
 
 
 def policy_is_active(policy: BatchPolicy, now: datetime) -> PauseReason | None:

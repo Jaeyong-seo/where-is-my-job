@@ -16,6 +16,8 @@ from uuid import uuid4
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from .region import load_region
+
 
 MIGRATIONS_DIR = Path(__file__).with_name("migrations")
 DEFAULT_DB_NAME = "application-automation.sqlite3"
@@ -57,7 +59,7 @@ def connect(path: str | Path | None = None) -> sqlite3.Connection:
     return connection
 def _policy_local_date(timezone: str) -> str:
     """Return today's ISO date for the only permitted batch-policy timezone."""
-    if timezone != "America/Vancouver":
+    if timezone != load_region().timezone:
         raise ValueError("unsupported policy timezone")
     return datetime.now(ZoneInfo(timezone)).date().isoformat()
 
@@ -169,12 +171,26 @@ def _script_object_names(script: str) -> set[str]:
     return created - dropped
 
 
-def apply_migrations(connection: sqlite3.Connection) -> None:
-    """Apply numbered, checksummed SQL migrations under one SQLite write lock."""
-    migrations = [
-        (migration.name, migration.read_text(encoding="utf-8"))
+def migration_scripts() -> list[tuple[str, str]]:
+    """Numbered migration scripts with the deployment region's timezone substituted.
+
+    Checksums are computed over the substituted text, so a database created for
+    one region refuses to migrate under another instead of silently reinterpreting
+    its policy rows.
+    """
+    timezone = load_region().timezone
+    return [
+        (
+            migration.name,
+            migration.read_text(encoding="utf-8").replace("{{POLICY_TIMEZONE}}", timezone),
+        )
         for migration in sorted(MIGRATIONS_DIR.glob("[0-9][0-9][0-9][0-9]_*.sql"))
     ]
+
+
+def apply_migrations(connection: sqlite3.Connection) -> None:
+    """Apply numbered, checksummed SQL migrations under one SQLite write lock."""
+    migrations = migration_scripts()
     scripts = dict(migrations)
     expected = {version: sha256(script.encode("utf-8")).hexdigest() for version, script in migrations}
     order_index = {version: index for index, (version, _) in enumerate(migrations)}

@@ -40,7 +40,13 @@
   "search": {
     "target_city_label": "Vancouver",
     "target_locations": ["Vancouver, BC", "Remote (Canada)"],
-    "timezone": "America/Vancouver"
+    "timezone": "America/Vancouver",
+    "province": "BC",
+    "country": "Canada",
+    "in_scope_locations": [
+      "Vancouver, BC", "Vancouver", "Metro Vancouver, BC", "Greater Vancouver, BC",
+      "North Vancouver, BC", "West Vancouver, BC", "Burnaby, BC", "Richmond, BC"
+    ]
   },
   "screening": {
     "drop_rules": [

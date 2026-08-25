@@ -8,6 +8,8 @@ import math
 from types import MappingProxyType
 from typing import Mapping
 
+from .region import load_region
+
 
 class ExecutionMode(str, Enum):
     DRY_RUN = "dry_run"
@@ -302,8 +304,9 @@ class BatchPolicy:
         object.__setattr__(self, "materials", tuple(self.materials))
         object.__setattr__(self, "permitted_assertion_keys", tuple(self.permitted_assertion_keys))
         object.__setattr__(self, "provider_kill_switch_revisions", MappingProxyType(dict(self.provider_kill_switch_revisions)))
-        if self.timezone != "America/Vancouver":
-            raise ValueError("batch policy timezone must be America/Vancouver")
+        region_timezone = load_region().timezone
+        if self.timezone != region_timezone:
+            raise ValueError(f"batch policy timezone must be {region_timezone}")
         if not math.isfinite(self.min_fit_score) or not 5 <= self.min_fit_score <= 10:
             raise ValueError("min_fit_score must be a finite value between 5 and 10")
         if not 1 <= self.daily_cap <= 20 or not self.provider_forms:
