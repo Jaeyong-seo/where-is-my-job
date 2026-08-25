@@ -27,6 +27,8 @@ flowchart LR
 
 ## Onboarding (do this once)
 
+**Fastest path:** open the repo in Claude Code and run `/initial-setup`. It interviews you (positions, keywords, target city, work authorization, salary anchors, resume sources), generates all three config files, calibrates the PDF layout with you, and verifies the result. The manual path is below.
+
 ```mermaid
 flowchart LR
     S1["1️⃣ Set up your profile<br/>user-profile.example.json<br/>→ user-profile.json"]
@@ -42,6 +44,17 @@ flowchart LR
 3. **Master resume template** — prepare the DOCX/PDF source of your one-page resume and record the paths under `files` in `user-profile.json`. The builder never rebuilds the layout: it clones your source and replaces only the headline, summary, and five skill lines in place. Calibrate the text-region coordinates once in `resume_template_layout`. For the markdown version, copy `profile/master-resume.example.md` to `profile/master-resume.md` and fill in your experience.
 4. **Accumulate sources** — resumes, portfolio notes, and memos go to `profile/raw/`; analysis (positioning, strengths/weaknesses) goes to `profile/analysis/`. The evidence arsenal for cover letters lives in `profile/analysis/positioning.md`.
 5. **Replace the samples** — delete the Example Corp / Acme sample entries in `jobs/tracker.json` and register real postings.
+
+Verify your setup at any point:
+
+```bash
+uv sync --group dev --group builders   # one-time environment setup
+python3 tools/doctor.py                # health check: config, sources, fonts, tracker
+python3 tools/calibrate_layout.py      # renders calibration-preview.png with the
+                                       # configured text regions drawn over your PDF
+```
+
+Iterate on `resume_template_layout` in `config/user-profile.json` and re-run the calibrator until every box sits exactly over the matching region of your template.
 
 ## Structure
 
@@ -118,7 +131,7 @@ python3 tools/build_job_dashboard.py && open dashboard.html
 bun tools/linkedin-jobs.ts search "frontend engineer" --location "Vancouver, BC"
 ```
 
-Builder requirements: Python 3.11+, PyMuPDF (`fitz`), `lxml`, `python-docx`, `reportlab`, and the TTF fonts declared under `fonts` in `user-profile.json`.
+Builder requirements: Python 3.11+ and the `builders` dependency group (`uv sync --group builders` installs PyMuPDF, `lxml`, `python-docx`, `reportlab`), plus the TTF fonts declared under `fonts` in `user-profile.json`.
 
 Status changes made in the `file://` dashboard are stored only in that browser's `localStorage` scratch. Export them with "Export application statuses" before moving to another browser. The permanent source of truth for postings and statuses is `jobs/tracker.json`.
 
@@ -141,6 +154,6 @@ The current runtime is deterministic-fixture only. `serve`, `queue`, `worker`, a
 
 Known limitation: the automation package's batch policy is currently pinned to the `America/Vancouver` timezone and a Vancouver-area location list (including CHECK constraints in the SQL migrations). Retargeting another region requires editing `application_automation/policy.py`, `models.py`, `store.py`, and `migrations/` together. Everything else — dashboard, builders, the skill — is region-agnostic.
 
-Tests: part of the `application_automation` suite under `pytest tests` is known to fail (fixture adapters under development). Builder, dashboard, and API tests pass.
+Tests: `pytest tests` runs green on a fresh clone (CI enforces it). A set of inherited fixture-adapter failures is quarantined as `xfail` via `tests/application_automation/known_failures.txt`; fix one and remove its line to bring it back into the count.
 
 Approved resumes and application materials may live in the repository. Credentials, session secrets, bootstrap tokens, raw assertion values, and provider payloads never do. CAPTCHA/MFA is never automated or bypassed.
