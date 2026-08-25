@@ -24,11 +24,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from user_config import (
     ROOT,
     TRACKER_PATH,
-    contact_line,
     expand,
     load_profile,
     load_tracks,
-    master_resume_template,
+    render_markdown_resume,
     resume_docx_name,
     resume_pdf_name,
 )
@@ -177,18 +176,7 @@ def build_pdf(path: Path, role: dict, content: dict) -> None:
 
 
 def markdown_resume(content: dict) -> str:
-    skill_lines = "\n".join(f"- **{label}:** {value}" for label, value in content["skills"])
-    template = master_resume_template()
-    replacements = {
-        "{{NAME}}": PROFILE["identity"]["name"].upper(),
-        "{{HEADLINE}}": content["headline"],
-        "{{CONTACT}}": contact_line(PROFILE),
-        "{{SUMMARY}}": content["summary"],
-        "{{SKILLS}}": skill_lines,
-    }
-    for placeholder, value in replacements.items():
-        template = template.replace(placeholder, value)
-    return template
+    return render_markdown_resume(PROFILE, content)
 
 
 def job_markdown(role: dict) -> str:

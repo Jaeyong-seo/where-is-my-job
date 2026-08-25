@@ -9,6 +9,7 @@
     "linkedin": "linkedin.com/in/janedoe",
     "linkedin_url": "https://www.linkedin.com/in/janedoe"
   },
+  "default_track": "fullstack",
   "files": {
     "resume_basename": "Jane Doe Resume",
     "cover_letter_basename": "Jane Doe Cover Letter",

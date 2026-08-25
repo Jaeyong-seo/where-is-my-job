@@ -13,6 +13,24 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+
+# Canonical vocabularies shared by the tracker, dashboard, and doctor.
+# Order matters: it drives dashboard filter menus and the pipeline metric row.
+STATUSES: list[tuple[str, str]] = [
+    ("discovered", "Discovered"),
+    ("materials_ready", "Ready"),
+    ("applied", "Applied"),
+    ("interview", "Interview"),
+    ("offer", "Offer"),
+    ("rejected", "Rejected"),
+    ("dropped", "Dropped"),
+]
+TIERS: list[tuple[str, str]] = [
+    ("precision", "Precision"),
+    ("volume", "Volume"),
+    ("remote_bonus", "Remote bonus"),
+    ("relocation", "Relocation"),
+]
 CONFIG_DIR = ROOT / "config"
 PROFILE_PATH = CONFIG_DIR / "user-profile.json"
 EXAMPLE_PROFILE_PATH = CONFIG_DIR / "user-profile.example.json"
@@ -82,6 +100,22 @@ def contact_line(profile: dict[str, Any]) -> str:
         )
         if part
     )
+
+
+def render_markdown_resume(profile: dict[str, Any], content: dict[str, Any]) -> str:
+    """Fill the master resume template with one track's headline/summary/skills."""
+    skill_lines = "\n".join(f"- **{label}:** {value}" for label, value in content["skills"])
+    template = master_resume_template()
+    replacements = {
+        "{{NAME}}": profile["identity"]["name"].upper(),
+        "{{HEADLINE}}": content["headline"],
+        "{{CONTACT}}": contact_line(profile),
+        "{{SUMMARY}}": content["summary"],
+        "{{SKILLS}}": skill_lines,
+    }
+    for placeholder, value in replacements.items():
+        template = template.replace(placeholder, value)
+    return template
 
 
 def resume_pdf_name(profile: dict[str, Any]) -> str:

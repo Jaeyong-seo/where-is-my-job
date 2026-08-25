@@ -20,6 +20,8 @@ from user_config import (
     MASTER_RESUME_TEMPLATE_PATH,
     PROFILE_PATH,
     ROOT,
+    STATUSES,
+    TIERS,
     TRACKER_PATH,
     TRACKS_PATH,
     expand,
@@ -79,7 +81,7 @@ def check_profile() -> dict:
     return profile
 
 
-def check_tracks() -> dict:
+def check_tracks(profile: dict) -> dict:
     section("Tracks (config/tracks.json)")
     if TRACKS_PATH.exists():
         report(OK, "personal tracks present")
@@ -101,6 +103,13 @@ def check_tracks() -> dict:
             report(FAIL, f"track '{name}': {'; '.join(problems)}")
         else:
             report(OK, f"track '{name}': valid")
+    default_track = profile.get("default_track")
+    if not default_track:
+        report(WARN, "no default_track in the profile — build_master_resume.py will need an explicit track")
+    elif default_track in tracks:
+        report(OK, f"default_track '{default_track}' exists")
+    else:
+        report(FAIL, f"default_track '{default_track}' is not a defined track")
     return tracks
 
 
@@ -185,13 +194,20 @@ def check_tracker(tracks: dict) -> None:
         return
     report(OK, f"{len(roles)} role(s) registered")
     required = ("id", "company", "title", "location", "status", "track", "application_dir", "keywords")
+    valid_statuses = {value for value, _ in STATUSES}
+    valid_tiers = {value for value, _ in TIERS}
     for role in roles:
         role_id = role.get("id", "<missing id>")
         missing = [field for field in required if field not in role]
         if missing:
             report(FAIL, f"role '{role_id}': missing fields {', '.join(missing)}")
-        elif role["track"] not in tracks:
+            continue
+        if role["track"] not in tracks:
             report(FAIL, f"role '{role_id}': unknown track '{role['track']}'")
+        if role["status"] not in valid_statuses:
+            report(FAIL, f"role '{role_id}': unknown status '{role['status']}'")
+        if "tier" in role and role["tier"] not in valid_tiers:
+            report(FAIL, f"role '{role_id}': unknown tier '{role['tier']}'")
     if any(role.get("company") in {"Example Corp", "Acme Inc"} for role in roles):
         report(WARN, "sample roles still present — replace them with real postings")
 
@@ -199,7 +215,7 @@ def check_tracker(tracks: dict) -> None:
 def main() -> int:
     print(f"where-is-my-job doctor · {ROOT}")
     profile = check_profile()
-    tracks = check_tracks()
+    tracks = check_tracks(profile)
     check_sources(profile)
     check_master_template()
     check_tracker(tracks)

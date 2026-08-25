@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from user_config import load_profile, resume_pdf_name
+from user_config import STATUSES, TIERS, load_profile, resume_pdf_name
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = ROOT / "jobs" / "tracker.json"
@@ -476,10 +476,10 @@ dialog::backdrop { background: rgba(11,18,27,.34); -webkit-backdrop-filter: blur
         <button class="segment-button" type="button" data-location="relocation" aria-pressed="false">Relocation</button>
       </fieldset>
       <select class="filter-select" id="tierFilter" aria-label="Priority">
-        <option value="all">All priorities</option><option value="precision">Precision</option><option value="volume">Volume</option><option value="remote_bonus">Remote bonus</option><option value="relocation">Relocation</option>
+        <option value="all">All priorities</option>__TIER_FILTER_OPTIONS__
       </select>
       <select class="filter-select" id="statusFilter" aria-label="Application status">
-        <option value="all">All statuses</option><option value="discovered">Discovered</option><option value="materials_ready">Ready</option><option value="applied">Applied</option><option value="interview">Interview</option><option value="offer">Offer</option><option value="rejected">Rejected</option><option value="dropped">Dropped</option>
+        <option value="all">All statuses</option>__STATUS_FILTER_OPTIONS__
       </select>
     </div>
     <div class="role-list" id="roleList"></div>
@@ -521,7 +521,9 @@ dialog::backdrop { background: rgba(11,18,27,.34); -webkit-backdrop-filter: blur
 const data = JSON.parse(document.getElementById('job-data').textContent);
 const roles = data.roles;
 const storageKey = '__STORAGE_KEY__';
-const statusOptions = ['discovered','materials_ready','applied','interview','offer','rejected','dropped'];
+const statusMeta = __STATUS_META__;
+const tierMeta = __TIER_META__;
+const statusOptions = statusMeta.map(item => item[0]);
 const roleIds = new Set(roles.map(role => role.id));
 let storageWarning = '';
 function setStorageWarning(message) {
@@ -574,9 +576,8 @@ const pollIntervalMs = 3000;
 const maxReconnectDelayMs = 30000;
 const queueInFlight = new Set();
 const labels = {
-  discovered:'Discovered', materials_ready:'Ready', applied:'Applied', interview:'Interview', offer:'Offer', rejected:'Rejected', dropped:'Dropped',
-  queued:'Queued', running:'Running', paused:'Awaiting user', awaiting_user:'Awaiting user', manual_follow_up:'Manual follow-up',
-  precision:'Precision', volume:'Volume', remote_bonus:'Remote bonus', relocation:'Relocation'
+  ...Object.fromEntries(statusMeta), ...Object.fromEntries(tierMeta),
+  queued:'Queued', running:'Running', paused:'Awaiting user', awaiting_user:'Awaiting user', manual_follow_up:'Manual follow-up'
 };
 const icons = {
   document:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v5h5M10 13h5M10 17h5"/></svg>',
@@ -805,7 +806,7 @@ function renderSpotlight() {
 }
 function renderMetrics() {
   const stage = status => roles.filter(role => currentStatus(role) === status).length;
-  const items = [[stage('discovered'), 'Discovered', ''],[stage('materials_ready'), 'Ready', ''],[stage('applied'), 'Applied', 'green'],[stage('interview'), 'Interview', 'purple'],[stage('offer'), 'Offer', 'orange']];
+  const items = [[stage('discovered'), labelFor('discovered'), ''],[stage('materials_ready'), labelFor('materials_ready'), ''],[stage('applied'), labelFor('applied'), 'green'],[stage('interview'), labelFor('interview'), 'purple'],[stage('offer'), labelFor('offer'), 'orange']];
   document.getElementById('metrics').innerHTML = items.map(([value,label,tone]) => `<article class="metric"><div class="metric-top"><div class="metric-value">${value}</div><div class="metric-icon ${tone}">${icons.detail}</div></div><div class="metric-label">${label}</div></article>`).join('');
 }
 function roleMatches(role) {
@@ -896,9 +897,18 @@ def render_dashboard(data: dict) -> str:
         "__BRAND_CITY__": html.escape(PROFILE["search"]["target_city_label"]),
         "__STORAGE_KEY__": html.escape(PROFILE["dashboard"]["storage_key"]),
         "__RESUME_PDF_NAME__": json.dumps(resume_pdf_name(PROFILE)).replace("<", "\\u003c"),
+        "__STATUS_META__": json.dumps([list(pair) for pair in STATUSES]).replace("<", "\\u003c"),
+        "__TIER_META__": json.dumps([list(pair) for pair in TIERS]).replace("<", "\\u003c"),
+        "__STATUS_FILTER_OPTIONS__": "".join(
+            f'<option value="{html.escape(value)}">{html.escape(label)}</option>' for value, label in STATUSES
+        ),
+        "__TIER_FILTER_OPTIONS__": "".join(
+            f'<option value="{html.escape(value)}">{html.escape(label)}</option>' for value, label in TIERS
+        ),
     }
     return re.sub(
-        r"__GENERATED_AT__|__JOB_DATA__|__BRAND_NAME__|__BRAND_INITIALS__|__BRAND_CITY__|__STORAGE_KEY__|__RESUME_PDF_NAME__",
+        r"__GENERATED_AT__|__JOB_DATA__|__BRAND_NAME__|__BRAND_INITIALS__|__BRAND_CITY__|__STORAGE_KEY__"
+        r"|__RESUME_PDF_NAME__|__STATUS_META__|__TIER_META__|__STATUS_FILTER_OPTIONS__|__TIER_FILTER_OPTIONS__",
         lambda match: replacements[match.group()],
         TEMPLATE,
     )

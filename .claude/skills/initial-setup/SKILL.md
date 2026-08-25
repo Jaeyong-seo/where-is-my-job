@@ -54,7 +54,7 @@ Only when the source PDF exists:
 
 ## Step 7 — Finish
 
-1. Rebuild the dashboard: `python3 tools/build_job_dashboard.py`, and confirm the header shows their name/initials/city.
+1. Regenerate the baseline resume (`python3 tools/build_master_resume.py`, uses `default_track`) and rebuild the dashboard (`python3 tools/build_job_dashboard.py`); confirm the header shows their name/initials/city.
 2. Remind them: sample roles in `jobs/tracker.json` are still in place — the first `/apply-cycle <posting-url>` replaces them with a real one, and they should delete the samples (`applications/example-corp/`, `applications/acme/`, plus the two tracker entries) whenever they like.
 3. Commit on a branch (`setup/<name>`), ff-merge to main per repo convention. Note: `config/user-profile.json`, `config/tracks.json`, and `profile/master-resume.md` are gitignored by default — if the repo is a private fork and the user wants them versioned, remove those lines from `.gitignore` with their confirmation.
 4. Final report: what was configured, what remains (e.g. missing DOCX template), and the suggested next command (`/apply-cycle <first-posting-url>`).

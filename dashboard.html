@@ -498,7 +498,9 @@ dialog::backdrop { background: rgba(11,18,27,.34); -webkit-backdrop-filter: blur
 const data = JSON.parse(document.getElementById('job-data').textContent);
 const roles = data.roles;
 const storageKey = 'wimj-job-status-v1';
-const statusOptions = ['discovered','materials_ready','applied','interview','offer','rejected','dropped'];
+const statusMeta = [["discovered", "Discovered"], ["materials_ready", "Ready"], ["applied", "Applied"], ["interview", "Interview"], ["offer", "Offer"], ["rejected", "Rejected"], ["dropped", "Dropped"]];
+const tierMeta = [["precision", "Precision"], ["volume", "Volume"], ["remote_bonus", "Remote bonus"], ["relocation", "Relocation"]];
+const statusOptions = statusMeta.map(item => item[0]);
 const roleIds = new Set(roles.map(role => role.id));
 let storageWarning = '';
 function setStorageWarning(message) {
@@ -551,9 +553,8 @@ const pollIntervalMs = 3000;
 const maxReconnectDelayMs = 30000;
 const queueInFlight = new Set();
 const labels = {
-  discovered:'Discovered', materials_ready:'Ready', applied:'Applied', interview:'Interview', offer:'Offer', rejected:'Rejected', dropped:'Dropped',
-  queued:'Queued', running:'Running', paused:'Awaiting user', awaiting_user:'Awaiting user', manual_follow_up:'Manual follow-up',
-  precision:'Precision', volume:'Volume', remote_bonus:'Remote bonus', relocation:'Relocation'
+  ...Object.fromEntries(statusMeta), ...Object.fromEntries(tierMeta),
+  queued:'Queued', running:'Running', paused:'Awaiting user', awaiting_user:'Awaiting user', manual_follow_up:'Manual follow-up'
 };
 const icons = {
   document:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v5h5M10 13h5M10 17h5"/></svg>',
@@ -782,7 +783,7 @@ function renderSpotlight() {
 }
 function renderMetrics() {
   const stage = status => roles.filter(role => currentStatus(role) === status).length;
-  const items = [[stage('discovered'), 'Discovered', ''],[stage('materials_ready'), 'Ready', ''],[stage('applied'), 'Applied', 'green'],[stage('interview'), 'Interview', 'purple'],[stage('offer'), 'Offer', 'orange']];
+  const items = [[stage('discovered'), labelFor('discovered'), ''],[stage('materials_ready'), labelFor('materials_ready'), ''],[stage('applied'), labelFor('applied'), 'green'],[stage('interview'), labelFor('interview'), 'purple'],[stage('offer'), labelFor('offer'), 'orange']];
   document.getElementById('metrics').innerHTML = items.map(([value,label,tone]) => `<article class="metric"><div class="metric-top"><div class="metric-value">${value}</div><div class="metric-icon ${tone}">${icons.detail}</div></div><div class="metric-label">${label}</div></article>`).join('');
 }
 function roleMatches(role) {
