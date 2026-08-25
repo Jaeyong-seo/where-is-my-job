@@ -55,6 +55,7 @@ TEMPLATE = r'''<!doctype html>
   --ease-in-out: cubic-bezier(.77,0,.175,1);
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { scroll-behavior: smooth; }
 body {
   margin: 0;
