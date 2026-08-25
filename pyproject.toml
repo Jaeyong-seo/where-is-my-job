@@ -1,0 +1,26 @@
+[project]
+name = "application-automation"
+version = "0.1.0"
+description = "Local, safety-bounded job application automation"
+requires-python = ">=3.11"
+dependencies = [
+  "cryptography==45.0.5",
+  "fastapi>=0.115",
+  "pydantic>=2.7",
+  "uvicorn[standard]>=0.30",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "httpx2>=2.7,<3",
+]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+[tool.hatch.build.targets.wheel]
+packages = ["application_automation"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

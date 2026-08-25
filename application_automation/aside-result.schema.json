@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "application_automation.aside.v1",
+  "title": "Application Automation Aside Result",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "operation", "domain", "page_fingerprint", "form_fingerprint", "fields"],
+      "properties": {
+        "schema": {"const": "application_automation.aside.v1"},
+        "operation": {"const": "inspect"},
+        "domain": {"type": "string", "minLength": 1},
+        "page_fingerprint": {"type": "string", "minLength": 1},
+        "form_fingerprint": {"type": "string", "minLength": 1},
+        "pause_reason": {"$ref": "#/$defs/pause_reason"},
+        "fields": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "operation", "domain", "page_fingerprint", "form_fingerprint", "filled", "attached_resume_sha256"],
+      "properties": {
+        "schema": {"const": "application_automation.aside.v1"},
+        "operation": {"const": "fill"},
+        "domain": {"type": "string", "minLength": 1},
+        "page_fingerprint": {"type": "string", "minLength": 1},
+        "form_fingerprint": {"type": "string", "minLength": 1},
+        "pause_reason": {"$ref": "#/$defs/pause_reason"},
+        "filled": {"type": "boolean"},
+        "attached_resume_sha256": {"$ref": "#/$defs/nullable_sha256"}
+      },
+      "oneOf": [
+        {"$ref": "#/$defs/paused_fill"},
+        {"$ref": "#/$defs/unpaused_fill"}
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "operation", "domain", "page_fingerprint", "form_fingerprint", "started", "confirmed", "manual_follow_up", "receipt_id"],
+      "properties": {
+        "schema": {"const": "application_automation.aside.v1"},
+        "operation": {"const": "submit"},
+        "domain": {"type": "string", "minLength": 1},
+        "page_fingerprint": {"type": "string", "minLength": 1},
+        "form_fingerprint": {"type": "string", "minLength": 1},
+        "pause_reason": {"$ref": "#/$defs/pause_reason"},
+        "started": {"type": "boolean"},
+        "confirmed": {"type": "boolean"},
+        "manual_follow_up": {"type": "boolean"},
+        "receipt_id": {"$ref": "#/$defs/nullable_nonempty_string"}
+      },
+      "oneOf": [
+        {"$ref": "#/$defs/paused_submit"},
+        {"$ref": "#/$defs/confirmed_submit"},
+        {"$ref": "#/$defs/manual_submit"}
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "operation", "domain", "page_fingerprint", "form_fingerprint", "state", "receipt_id"],
+      "properties": {
+        "schema": {"const": "application_automation.aside.v1"},
+        "operation": {"const": "observe"},
+        "domain": {"type": "string", "minLength": 1},
+        "page_fingerprint": {"type": "string", "minLength": 1},
+        "form_fingerprint": {"type": "string", "minLength": 1},
+        "pause_reason": {"$ref": "#/$defs/pause_reason"},
+        "state": {"enum": ["not_started", "confirmed", "manual_follow_up", "awaiting_user"]},
+        "receipt_id": {"$ref": "#/$defs/nullable_nonempty_string"}
+      },
+      "oneOf": [
+        {"$ref": "#/$defs/paused_observation"},
+        {"$ref": "#/$defs/confirmed_observation"},
+        {"$ref": "#/$defs/unconfirmed_observation"}
+      ]
+    }
+  ],
+  "$defs": {
+    "nullable_sha256": {"anyOf": [{"type": "null"}, {"type": "string", "pattern": "^[0-9a-f]{64}$"}]},
+    "nullable_nonempty_string": {"anyOf": [{"type": "null"}, {"type": "string", "minLength": 1}]},
+    "non_null_pause_reason": {"enum": ["captcha", "mfa", "security_challenge", "rate_limit", "provider_challenge", "login", "account_creation", "new_question", "unknown_question", "sensitive_question", "legal_question", "required_demographics", "street_address", "salary_unverified", "salary_exact_number", "attestation", "form_drift", "posting_drift", "unexpected_redirect"]},
+    "pause_reason": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/non_null_pause_reason"}]},
+    "paused_fill": {"required": ["pause_reason"], "properties": {"pause_reason": {"$ref": "#/$defs/non_null_pause_reason"}, "filled": {"const": false}, "attached_resume_sha256": {"type": "null"}}},
+    "unpaused_fill": {"properties": {"pause_reason": {"type": "null"}, "filled": {"const": true}}},
+    "paused_submit": {"required": ["pause_reason"], "properties": {"pause_reason": {"$ref": "#/$defs/non_null_pause_reason"}, "started": {"const": false}, "confirmed": {"const": false}, "manual_follow_up": {"const": false}, "receipt_id": {"type": "null"}}},
+    "confirmed_submit": {"properties": {"pause_reason": {"type": "null"}, "started": {"const": true}, "confirmed": {"const": true}, "manual_follow_up": {"const": false}, "receipt_id": {"type": "string", "minLength": 1}}},
+    "manual_submit": {"properties": {"pause_reason": {"type": "null"}, "started": {"const": true}, "confirmed": {"const": false}, "manual_follow_up": {"const": true}, "receipt_id": {"type": "null"}}},
+    "paused_observation": {"required": ["pause_reason"], "properties": {"pause_reason": {"$ref": "#/$defs/non_null_pause_reason"}, "state": {"const": "awaiting_user"}, "receipt_id": {"type": "null"}}},
+    "confirmed_observation": {"properties": {"pause_reason": {"type": "null"}, "state": {"const": "confirmed"}, "receipt_id": {"type": "string", "minLength": 1}}},
+    "unconfirmed_observation": {"properties": {"pause_reason": {"type": "null"}, "state": {"enum": ["not_started", "manual_follow_up"]}, "receipt_id": {"type": "null"}}}
+  }
+}

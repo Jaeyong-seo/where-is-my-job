@@ -1,0 +1,27 @@
+{
+  "_comment": "A track is one positioning of your resume: headline + summary + exactly five skill lines. Pick the track whose emphasis matches the JD; add a new track only when no existing one covers it. Copy this file to config/tracks.json and replace the content with your own.",
+  "tracks": {
+    "fullstack": {
+      "headline": "Full-Stack Product Engineer | React / Node.js",
+      "summary": "Full-stack product engineer with N years building and operating customer-facing products. Replace this with two to three sentences: your scope, your stack, one concrete proof point, and your location / work-authorization line.",
+      "skills": [
+        ["Languages", "TypeScript, JavaScript, Python, SQL, HTML/CSS"],
+        ["Frontend", "React, Next.js, component architecture, responsive UI"],
+        ["Backend & Data", "Node.js, PostgreSQL, REST APIs, data modeling"],
+        ["Quality & Ops", "Automated testing, CI, observability, code review"],
+        ["Platform", "Vercel, Git, cloud deployment, API integrations"]
+      ]
+    },
+    "frontend": {
+      "headline": "Frontend Engineer | React / TypeScript",
+      "summary": "Frontend-focused engineer with N years shipping user-facing products. Replace this with two to three sentences emphasizing UI craft, accessibility, and product sense, plus your location / work-authorization line.",
+      "skills": [
+        ["Languages", "TypeScript, JavaScript, HTML/CSS"],
+        ["Frontend", "React, Next.js, state management, design systems"],
+        ["Quality", "Accessibility, automated testing, CI, performance"],
+        ["Backend & Data", "Node.js, REST APIs, PostgreSQL basics"],
+        ["Tooling", "Git, Figma handoff, analytics, feature flags"]
+      ]
+    }
+  }
+}

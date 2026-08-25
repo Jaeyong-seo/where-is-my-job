@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "default": {
+    "allow_live_traffic": false,
+    "allowed_operations": [],
+    "reason": "Live provider traffic is denied by default."
+  },
+  "providers": {
+    "aside_fixture": {
+      "mode": "fixture_only",
+      "allow_live_traffic": false,
+      "allowed_operations": ["inspect", "fill", "submit", "observe"],
+      "loopback_origin": "http://127.0.0.1",
+      "fixture": {
+        "version": "v1",
+        "script": "application_automation/aside_scripts/fixture/v1/form.js",
+        "script_sha256": "5bbe62fea9359b3c6a23cee278b85f1e516d9eb2844af9e791cc8f3fb311e3cd",
+        "result_schema": "application_automation.aside.v1",
+        "result_schema_artifact": "application_automation/aside-result.schema.json",
+        "result_schema_canonicalization": "utf-8 exact bytes",
+        "result_schema_sha256": "1fab4b886d52a5879d3f780b3392eb5cc8ab8c97440e8eaf1eeebd99a0e41d0c",
+        "page_fingerprint": "fixture-page-v1",
+        "form_fingerprint": "fixture-form-v1",
+        "allowed_domains": ["fixture.local"]
+      }
+    }
+  }
+}

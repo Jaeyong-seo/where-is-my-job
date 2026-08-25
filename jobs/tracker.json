@@ -1,0 +1,78 @@
+{
+  "generated_at": "2026-08-25T00:00:00Z",
+  "candidate": {
+    "name": "Jane Doe",
+    "location": "Vancouver, BC",
+    "email": "jane.doe@example.com",
+    "phone": "555-000-0000",
+    "linkedin": "https://www.linkedin.com/in/janedoe",
+    "work_authorization": "Authorized to work in Canada with no sponsorship required"
+  },
+  "roles": [
+    {
+      "id": "example-corp-full-stack-engineer",
+      "company": "Example Corp",
+      "domain": "example.com",
+      "title": "Full-Stack Engineer",
+      "location": "Vancouver, BC",
+      "work_model": "Hybrid; 3 days in office",
+      "channel": "Company site",
+      "source_url": "https://example.com/careers/full-stack-engineer",
+      "apply_url": "https://example.com/careers/full-stack-engineer/apply",
+      "posted": "2026-08-01",
+      "salary": "CA$110k-135k",
+      "score": 8.5,
+      "tier": "precision",
+      "status": "materials_ready",
+      "track": "fullstack",
+      "keywords": [
+        "TypeScript",
+        "React",
+        "Node.js",
+        "PostgreSQL"
+      ],
+      "requirements": "3-5 years; customer-facing web products; full-stack ownership",
+      "match": "Sample entry: replace with an honest rationale covering gates met, narrative mapping, explicit gaps, and channel.",
+      "application_dir": "applications/example-corp/full-stack-engineer",
+      "posting_active": true,
+      "remote": false,
+      "remote_country": null,
+      "material_manifest": {
+        "path": "Jane Doe Resume.pdf",
+        "sha256": "2d413701c178e598b7d24bb882847d632b2341c8f1c591c6af4234ffebcd4177"
+      }
+    },
+    {
+      "id": "acme-frontend-engineer",
+      "company": "Acme Inc",
+      "domain": "acme.test",
+      "title": "Frontend Engineer",
+      "location": "Vancouver, BC",
+      "work_model": "Onsite",
+      "channel": "LinkedIn",
+      "source_url": "https://acme.test/jobs/frontend-engineer",
+      "apply_url": "https://acme.test/jobs/frontend-engineer/apply",
+      "posted": "2026-08-10",
+      "salary": "Not disclosed",
+      "score": 7.0,
+      "tier": "volume",
+      "status": "discovered",
+      "track": "frontend",
+      "keywords": [
+        "React",
+        "TypeScript",
+        "Accessibility"
+      ],
+      "requirements": "2+ years; React; accessibility mindset",
+      "match": "Sample entry in discovered state: materials are not built yet.",
+      "application_dir": "applications/acme/frontend-engineer",
+      "posting_active": true,
+      "remote": false,
+      "remote_country": null,
+      "material_manifest": {
+        "path": "Jane Doe Resume.pdf",
+        "sha256": "2d413701c178e598b7d24bb882847d632b2341c8f1c591c6af4234ffebcd4177"
+      }
+    }
+  ]
+}

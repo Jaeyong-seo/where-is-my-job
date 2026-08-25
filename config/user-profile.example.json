@@ -1,0 +1,57 @@
+{
+  "identity": {
+    "name": "Jane Doe",
+    "initials": "JD",
+    "headline_role": "Full-Stack Product Engineer | React / Node.js",
+    "email": "jane.doe@example.com",
+    "phone": "555-000-0000",
+    "location": "Vancouver, BC",
+    "linkedin": "linkedin.com/in/janedoe",
+    "linkedin_url": "https://www.linkedin.com/in/janedoe"
+  },
+  "files": {
+    "resume_basename": "Jane Doe Resume",
+    "cover_letter_basename": "Jane Doe Cover Letter",
+    "source_resume_docx": "~/Downloads/Jane Doe Resume.docx",
+    "source_resume_pdf": "~/Downloads/Jane Doe Resume.pdf"
+  },
+  "fonts": {
+    "regular": "/System/Library/Fonts/Supplemental/Arial.ttf",
+    "bold": "/System/Library/Fonts/Supplemental/Arial Bold.ttf"
+  },
+  "resume_template_layout": {
+    "_comment": "Coordinates of the headline / summary / skills regions in YOUR one-page resume template. Calibrate once with a PDF viewer that shows point coordinates; the builder fails loudly when text does not fit.",
+    "docx_paragraph_count": 40,
+    "docx_headline_index": 1,
+    "docx_summary_index": 4,
+    "docx_skills_start_index": 6,
+    "pdf_redact_rects": [
+      [49, 60.2, 561, 74.1],
+      [49, 106.4, 562, 142.1],
+      [49, 162.4, 562, 224.0]
+    ],
+    "pdf_headline_baseline": [50, 70.75],
+    "pdf_summary_box": [50, 105.8, 561, 143.0],
+    "pdf_skill_baselines": [171.75, 184.0, 196.25, 208.5, 220.75],
+    "pdf_max_text_width": 510,
+    "pdf_headline_gray": [89, 89, 89]
+  },
+  "search": {
+    "target_city_label": "Vancouver",
+    "target_locations": ["Vancouver, BC", "Remote (Canada)"],
+    "timezone": "America/Vancouver"
+  },
+  "screening": {
+    "drop_rules": [
+      "Roles restricted to a country where you have no work authorization",
+      "Seniority gates far above your band (e.g. 7+ years / Staff-only)",
+      "Staffing agencies and ghost postings"
+    ],
+    "sponsorship_answer": "Yes",
+    "salary_answer_anchor": "mid-to-low end of the posted band",
+    "work_authorization_statement": "Authorized to work in Canada with no sponsorship required"
+  },
+  "dashboard": {
+    "storage_key": "wimj-job-status-v1"
+  }
+}
